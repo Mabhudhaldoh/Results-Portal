@@ -1,0 +1,16 @@
+{
+  "name": "online-results-system",
+  "version": "1.0.0",
+  "description": "Martin Luther King Jnr. Family of Schools - Online Results Management System",
+  "private": true,
+  "scripts": {
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "preview": "cd client && npm run preview",
+    "install:all": "npm install && cd client && npm install"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "mongodb": "^7.5.0"
+  }
+}
