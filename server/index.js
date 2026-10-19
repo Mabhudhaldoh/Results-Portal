@@ -32,6 +32,17 @@ app.use(express.urlencoded({
 }));
 
 
+// Connect to MongoDB before API handlers run; the promise is reused on warm instances.
+app.use('/api', async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('MongoDB connection unavailable:', error.message);
+    res.status(503).json({ success: false, message: 'Database temporarily unavailable. Please try again.' });
+  }
+});
+
 // Rate Limiting
 const limiter = rateLimit({
 
@@ -52,8 +63,9 @@ app.use('/uploads', express.static(
   path.join(__dirname, 'uploads')
 ));
 
+const publicDir = path.join(__dirname, '..', 'public');
 const clientDist = path.join(__dirname, '..', 'client', 'dist');
-if (require('fs').existsSync(clientDist)) {
+if (require('fs').existsSync(clientDist) && process.env.VERCEL !== '1') {
   app.use(express.static(clientDist));
 }
 
@@ -84,11 +96,16 @@ app.use('/api/submissions', require('./routes/submissions'));
 
 
 // Serve client index.html for any non-API route (client-side routing)
-if (require('fs').existsSync(clientDist)) {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
-  });
-}
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, message: 'API endpoint not found.' });
+  }
+  const publicIndex = path.join(publicDir, 'index.html');
+  const localIndex = path.join(clientDist, 'index.html');
+  if (require('fs').existsSync(publicIndex)) return res.sendFile(publicIndex);
+  if (require('fs').existsSync(localIndex)) return res.sendFile(localIndex);
+  return next();
+});
 
 
 // Error Handler
@@ -108,17 +125,19 @@ app.use((err, req, res, next) => {
 
 
 
-const PORT = process.env.PORT || 5000;
-
-
-connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log('================================');
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log('🗄️ Database: MongoDB Atlas');
-    console.log('================================');
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  connectDB().then(() => {
+    app.listen(PORT, () => {
+      console.log('================================');
+      console.log(`Server running on port ${PORT}`);
+      console.log('Database: MongoDB Atlas');
+      console.log('================================');
+    });
+  }).catch(err => {
+    console.error('Failed to start server:', err.message);
+    process.exitCode = 1;
   });
-}).catch(err => {
-  console.error('Failed to start server:', err.message);
-  process.exit(1);
-});
+}
+
+module.exports = app;
