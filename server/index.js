@@ -11,6 +11,9 @@ const { connectDB } = require('./config/db');
 
 const app = express();
 
+// Trust the single proxy hop used by Vercel so express-rate-limit can read client IPs.
+app.set('trust proxy', 1);
+
 
 // Security Middleware
 app.use(helmet({
