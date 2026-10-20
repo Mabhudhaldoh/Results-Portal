@@ -30,7 +30,7 @@ export default function FinancePage() {
         api.get(`/students?limit=1000&search=${encodeURIComponent(search)}${classFilter ? `&className=${encodeURIComponent(classFilter)}` : ''}`),
         api.get('/classes'),
       ]);
-      setStudents(studentsRes.data.students || []);
+      setStudents((studentsRes.data.students || []).map((student: StudentFees) => ({ ...student, feesRequired: Number(student.feesRequired || 0), feesPaid: Number(student.feesPaid || 0), feesBalance: Number(student.feesBalance ?? Math.max(0, Number(student.feesRequired || 0) - Number(student.feesPaid || 0))) })));
       setClasses(classesRes.data.classes || []);
       setLoadError('');
     } catch (err: any) {
