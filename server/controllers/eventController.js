@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const { storeUploadedFile } = require("../utils/fileStorage");
 const MANAGERS = ['admin', 'headmaster', 'finance'];
 
 exports.getEventRecipients = async (req, res) => {
@@ -43,8 +44,7 @@ exports.createEvent = async (req, res) => {
     if (!title || !date) return res.status(400).json({ success: false, message: 'Title and date are required' });
     if (!['all', 'students', 'teachers', 'selected'].includes(audience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
     if (audience === 'selected' && recipientIds.length === 0) return res.status(400).json({ success: false, message: 'Select at least one recipient' });
-    let attachment = null;
-    if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
+    const attachment = req.file ? await storeUploadedFile(req.file) : null;
     const event = await db.collection('events').create({
       title, description: description || '', date, time: time || '', location: location || '', category,
       audience, recipientIds: audience === 'selected' ? recipientIds : [], attachment,
@@ -69,8 +69,7 @@ exports.updateEvent = async (req, res) => {
     let recipientIds = req.body.recipientIds;
     if (typeof recipientIds === 'string') { try { recipientIds = JSON.parse(recipientIds); } catch { recipientIds = []; } }
     if (recipientIds !== undefined && !Array.isArray(recipientIds)) recipientIds = [];
-    let attachment = event.attachment || null;
-    if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
+    const attachment = req.file ? await storeUploadedFile(req.file) : (event.attachment || null);
     const newAudience = audience ?? event.audience ?? 'all';
     const newRecipientIds = newAudience === 'selected' ? (recipientIds ?? event.recipientIds ?? []) : [];
     if (!['all', 'students', 'teachers', 'selected'].includes(newAudience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
