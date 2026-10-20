@@ -10,7 +10,7 @@ interface Attachment {
 }
 
 interface Notice {
-  _id: string; title: string; content: string; category: string; audience: string;
+  _id: string; title: string; content: string; category: string; audience: string; recipientIds?: string[];
   priority: string; createdByName?: string; attachment?: Attachment | null; className?: any; isActive: boolean; createdAt: string;
 }
 
@@ -21,6 +21,7 @@ const audienceMeta: Record<string, { label: string; cls: string }> = {
   students: { label: 'Students only', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40' },
   teachers: { label: 'Staff only', cls: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40' },
   form: { label: 'Specific Form', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40' },
+  selected: { label: 'Selected people', cls: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40' },
 };
 
 const catMeta: Record<string, { label: string; icon: any; cls: string }> = {
@@ -33,14 +34,15 @@ const catMeta: Record<string, { label: string; icon: any; cls: string }> = {
 
 export default function NoticesPage() {
   const { user } = useAuth();
-  const canManage = user?.role === 'admin' || user?.role === 'headmaster';
+  const canManage = user?.role === 'admin' || user?.role === 'headmaster' || user?.role === 'finance';
   const [notices, setNotices] = useState<Notice[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
+  const [recipients, setRecipients] = useState<any[]>([]);
   const [category, setCategory] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [edit, setEdit] = useState<Notice | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '' });
+  const [form, setForm] = useState({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '', recipientIds: [] as string[] });
 
   const fetchNotices = () => {
     api.get(`/notices${category ? `?category=${category}` : ''}`).then(r => setNotices(r.data.notices || []));
@@ -48,15 +50,17 @@ export default function NoticesPage() {
   useEffect(() => {
     fetchNotices();
     api.get('/classes').then(r => setClasses(r.data.classes || [])).catch(() => {});
-  }, [category]);
+    if (canManage) api.get('/notices/recipients').then(r => setRecipients(r.data.recipients || [])).catch(() => toast.error('Unable to load recipient list'));
+  }, [category, canManage]);
 
-  const openCreate = () => { setEdit(null); setForm({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '' }); setShowModal(true); };
-  const openEdit = (n: Notice) => { setEdit(n); setForm({ title: n.title, content: n.content, category: n.category, audience: n.audience, priority: n.priority, className: (n.className && n.className._id) || n.className || '' }); setShowModal(true); };
+  const openCreate = () => { setEdit(null); setForm({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '', recipientIds: [] }); setShowModal(true); };
+  const openEdit = (n: Notice) => { setEdit(n); setForm({ title: n.title, content: n.content, category: n.category, audience: n.audience, priority: n.priority, className: (n.className && n.className._id) || n.className || '', recipientIds: n.recipientIds || [] }); setShowModal(true); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.content) return toast.error('Title and content are required');
     if (form.audience === 'form' && !form.className) return toast.error('Select a form/class for this notice');
+    if (form.audience === 'selected' && form.recipientIds.length === 0) return toast.error('Select at least one person to receive this notice');
     const fd = new FormData();
     fd.append('title', form.title);
     fd.append('content', form.content);
@@ -64,6 +68,7 @@ export default function NoticesPage() {
     fd.append('audience', form.audience);
     fd.append('priority', form.priority);
     if (form.audience === 'form') fd.append('className', form.className);
+    if (form.audience === 'selected') fd.append('recipientIds', JSON.stringify(form.recipientIds));
     if (fileRef.current?.files?.[0]) fd.append('file', fileRef.current.files[0]);
     try {
       if (edit) await api.put(`/notices/${edit._id}`, fd);
@@ -182,6 +187,7 @@ export default function NoticesPage() {
                       <option value="students">Students only</option>
                       <option value="teachers">Staff only</option>
                       <option value="form">Specific Form</option>
+                      <option value="selected">Selected people (individuals or group)</option>
                     </select>
                   </div>
                   <div>
@@ -199,6 +205,24 @@ export default function NoticesPage() {
                       <option value="">Select a form</option>
                       {classes.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                     </select>
+                  </div>
+                )}
+                {form.audience === 'selected' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between"><label className="label">Choose recipients</label><span className="text-xs text-gray-500">{form.recipientIds.length} selected</span></div>
+                    <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 p-2 space-y-1">
+                      {recipients.map(person => {
+                        const id = String(person._id);
+                        const checked = form.recipientIds.includes(id);
+                        return <label key={id} className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm cursor-pointer">
+                          <input type="checkbox" checked={checked} onChange={e => setForm({ ...form, recipientIds: e.target.checked ? [...form.recipientIds, id] : form.recipientIds.filter(x => x !== id) })} />
+                          <span className="flex-1">{person.firstName} {person.lastName} {person.admissionNumber ? '(' + person.admissionNumber + ')' : ''}</span>
+                          <span className="text-xs capitalize text-gray-500">{person.role}{person.className ? ' · ' + person.className : ''}</span>
+                        </label>;
+                      })}
+                      {recipients.length === 0 && <p className="p-3 text-sm text-gray-500">Recipient list is loading or empty.</p>}
+                    </div>
+                    <p className="text-xs text-gray-500">Select one person or several people. Only the selected accounts will see this notice.</p>
                   </div>
                 )}
                 <div>
