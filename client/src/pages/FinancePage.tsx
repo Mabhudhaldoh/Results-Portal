@@ -14,6 +14,7 @@ export default function FinancePage() {
   const [students, setStudents] = useState<StudentFees[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -26,16 +27,19 @@ export default function FinancePage() {
   const fetchData = async () => {
     try {
       const [studentsRes, classesRes] = await Promise.all([
-        api.get(`/students?search=${search}${classFilter ? `&className=${classFilter}` : ''}`),
+        api.get(`/students?limit=1000&search=${encodeURIComponent(search)}${classFilter ? `&className=${encodeURIComponent(classFilter)}` : ''}`),
         api.get('/classes'),
       ]);
-      setStudents(studentsRes.data.students);
-      setClasses(classesRes.data.classes);
-    } catch { }
+      setStudents(studentsRes.data.students || []);
+      setClasses(classesRes.data.classes || []);
+      setLoadError('');
+    } catch (err: any) {
+      setLoadError(err.response?.data?.message || err.message || 'Unable to load students. Please refresh and try again.');
+    }
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [search, classFilter]);
+  useEffect(() => { setLoading(true); const timer = setTimeout(() => { fetchData(); }, 250); return () => clearTimeout(timer); }, [search, classFilter]);
 
   const feesStatus = (s: StudentFees) => {
     if (s.feesBalance <= 0) return { label: 'Paid', cls: 'badge-success' };
@@ -132,6 +136,8 @@ export default function FinancePage() {
           </div>
         </div>
       </div>
+
+      {loadError && <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-200">{loadError} <button className="underline font-semibold ml-2" onClick={() => { setLoading(true); fetchData(); }}>Try again</button></div>}
 
       <div className="card">
         <div className="flex items-center gap-3 mb-4">
