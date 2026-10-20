@@ -91,7 +91,7 @@ export default function Sidebar() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-b border-slate-700 bg-slate-950">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-mlk-red rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img src="/school_logo.png" alt="MLK" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex'; }} />
@@ -99,8 +99,8 @@ export default function Sidebar() {
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate">MLK Family</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Results System</p>
+              <h1 className="text-sm font-bold text-white truncate">MLK Family</h1>
+              <p className="text-xs text-slate-400 truncate">Results System</p>
             </div>
           )}
         </div>
@@ -123,7 +123,7 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-t border-slate-700 bg-slate-950">
         <button onClick={toggle} className={`sidebar-link w-full ${collapsed ? 'justify-center px-2' : ''}`}>
           {dark ? <Sun size={20} /> : <Moon size={20} />}
           {!collapsed && <span>{dark ? 'Light Mode' : 'Dark Mode'}</span>}
@@ -147,7 +147,7 @@ export default function Sidebar() {
 
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setMobileOpen(false)}>
-          <div className="w-64 h-full bg-white dark:bg-gray-900" onClick={e => e.stopPropagation()}>
+          <div className="w-64 h-full bg-slate-950 border-r border-slate-800 shadow-2xl" onClick={e => e.stopPropagation()}>
             <button onClick={() => setMobileOpen(false)} className="absolute top-4 right-4 p-1">
               <X size={20} />
             </button>
@@ -156,11 +156,11 @@ export default function Sidebar() {
         </div>
       )}
 
-      <aside className={`hidden lg:block ${collapsed ? 'w-[70px]' : 'w-64'} bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex-shrink-0`}>
+      <aside className={`hidden lg:block ${collapsed ? 'w-[70px]' : 'w-64'} bg-slate-950 border-r border-slate-800 shadow-xl transition-all duration-300 flex-shrink-0`}>
         <SidebarContent />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-4 -right-3 w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-xs hover:bg-gray-300 dark:hover:bg-gray-600 hidden lg:flex"
+          className="absolute top-4 -right-3 w-6 h-6 bg-slate-700 text-white rounded-full flex items-center justify-center text-xs hover:bg-mlk-red shadow-md hidden lg:flex"
         >
           {collapsed ? '>' : '<'}
         </button>
