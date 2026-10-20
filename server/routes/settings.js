@@ -4,6 +4,6 @@ const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect);
 
-router.route('/').get(getSettings).put(authorize('admin'), updateSettings);
+router.route('/').get(getSettings).put(authorize('admin', 'finance'), updateSettings);
 
 module.exports = router;
