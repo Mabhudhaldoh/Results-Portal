@@ -33,7 +33,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-mlk-red via-red-800 to-mlk-blue px-4">
+    <div
+      className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat px-4 py-8 relative"
+      style={{
+        backgroundImage: "linear-gradient(rgba(9, 24, 55, 0.52), rgba(9, 24, 55, 0.68)), url('https://raw.githubusercontent.com/Mabhudhaldoh/Results-Portal/main/Loginbackground.png')",
+      }}
+    >
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
