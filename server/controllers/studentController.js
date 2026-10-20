@@ -20,9 +20,23 @@ exports.getStudents = async (req, res) => {
     }
 
     students = await Promise.all(students.map(async st => {
-      const { password, ...rest } = st;
+      const rest = { ...st };
+      delete rest.password;
       rest.className = rest.className ? await db.collection('classes').findById(rest.className) : null;
       rest.stream = rest.stream ? await db.collection('streams').findById(rest.stream) : null;
+      if (req.user.role === 'finance') {
+        return {
+          _id: rest._id,
+          admissionNumber: rest.admissionNumber,
+          firstName: rest.firstName,
+          lastName: rest.lastName,
+          className: rest.className ? { _id: rest.className._id, name: rest.className.name } : null,
+          feesRequired: rest.feesRequired || 0,
+          feesPaid: rest.feesPaid || 0,
+          feesBalance: rest.feesBalance ?? Math.max(0, (rest.feesRequired || 0) - (rest.feesPaid || 0)),
+          isActive: rest.isActive,
+        };
+      }
       return rest;
     }));
 
