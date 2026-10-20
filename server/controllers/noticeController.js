@@ -35,13 +35,15 @@ exports.getNotices = async (req, res) => {
       notices = notices.filter(n => n.audience !== 'students' && (n.audience !== 'selected' || (n.recipientIds || []).includes(req.user._id)));
     }
 
-    notices = await Promise.all(notices.map(async n => {
-      if (n.className && typeof n.className === 'string') {
-        const cls = await db.collection('classes').findById(n.className);
-        if (cls) n = { ...n, className: { _id: cls._id, name: cls.name } };
-      }
-      return n;
-    }));
+    const classIds = [...new Set(notices.map(n => n.className).filter(id => id && typeof id === 'string').map(String))];
+    if (classIds.length) {
+      const classes = await db.collection('classes').find({ _id: { $in: classIds } });
+      const classMap = new Map(classes.map(c => [String(c._id), c]));
+      notices = notices.map(n => {
+        const cls = n.className ? classMap.get(String(n.className)) : null;
+        return cls ? { ...n, className: { _id: cls._id, name: cls.name } } : n;
+      });
+    }
 
     notices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json({ success: true, notices });
