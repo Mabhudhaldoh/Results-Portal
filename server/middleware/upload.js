@@ -4,7 +4,7 @@ const multer = require('multer');
 // persist them to MongoDB GridFS from the notice/event controllers.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
 });
 
 module.exports = upload;
