@@ -33,14 +33,14 @@ export default function Navbar() {
 
   return (
     <>
-    <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-16 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
       <div className="flex items-center gap-4 flex-1 ml-12 lg:ml-0">
         <div className="relative hidden md:flex flex-1 max-w-md">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search students, teachers, results..."
-            className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-mlk-blue outline-none"
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-mlk-blue outline-none transition-colors"
           />
         </div>
       </div>
