@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const { storeUploadedFile } = require("../utils/fileStorage");
 
 const CATEGORIES = ['general', 'holiday', 'sports', 'club', 'emergency'];
 const MANAGERS = ['admin', 'headmaster', 'finance'];
@@ -63,8 +64,7 @@ exports.createNotice = async (req, res) => {
     if (!['all', 'students', 'teachers', 'form', 'selected'].includes(audience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
     if (audience === 'form' && !className) return res.status(400).json({ success: false, message: 'Select a form/class for this notice' });
     if (audience === 'selected' && recipientIds.length === 0) return res.status(400).json({ success: false, message: 'Select at least one recipient' });
-    let attachment = null;
-    if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
+    const attachment = req.file ? await storeUploadedFile(req.file) : null;
     const notice = await db.collection('notices').create({
       title, content, category, audience, priority, className: audience === 'form' ? className : null,
       recipientIds: audience === 'selected' ? recipientIds : [], attachment,
@@ -96,8 +96,7 @@ exports.updateNotice = async (req, res) => {
     if (newAudience === 'form' && !className) {
       return res.status(400).json({ success: false, message: 'Select a form/class for this notice' });
     }
-    let attachment = notice.attachment || null;
-    if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
+    const attachment = req.file ? await storeUploadedFile(req.file) : (notice.attachment || null);
     const updated = await db.collection('notices').findByIdAndUpdate(req.params.id, {
       title: title ?? notice.title,
       content: content ?? notice.content,
