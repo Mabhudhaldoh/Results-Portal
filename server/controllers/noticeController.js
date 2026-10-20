@@ -5,16 +5,15 @@ const MANAGERS = ['admin', 'headmaster', 'finance'];
 
 exports.getNoticeRecipients = async (req, res) => {
   try {
-    const users = await db.collection('users').find({ isActive: true });
-    const recipients = await Promise.all(users
-      .filter(u => ['student', 'teacher', 'finance', 'headmaster', 'admin'].includes(u.role))
-      .map(async u => {
-        const cls = u.className ? await db.collection('classes').findById(u.className) : null;
-        return { _id: u._id, firstName: u.firstName || '', lastName: u.lastName || '', role: u.role, admissionNumber: u.admissionNumber || '', className: cls?.name || '' };
-      }));
+    const users = await db.collection('users').find({});
+    const activeUsers = users.filter(u => u.isActive !== false && ['student', 'teacher', 'finance', 'headmaster', 'admin'].includes(u.role));
+    const classes = await db.collection('classes').find({});
+    const classNames = new Map(classes.map(c => [String(c._id), c.name || '']));
+    const recipients = activeUsers.map(u => ({ _id: u._id, firstName: u.firstName || '', lastName: u.lastName || '', role: u.role, admissionNumber: u.admissionNumber || '', className: classNames.get(String(u.className || '')) || '' }));
     res.json({ success: true, recipients });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Notice operation failed:', error);
+    res.status(500).json({ success: false, message: error.message || 'Unable to save notice. Please try again.' });
   }
 };
 
@@ -59,6 +58,7 @@ exports.createNotice = async (req, res) => {
     if (!Array.isArray(recipientIds)) recipientIds = [];
     if (!title || !content) return res.status(400).json({ success: false, message: 'Title and content are required' });
     if (!CATEGORIES.includes(category)) return res.status(400).json({ success: false, message: 'Invalid category' });
+    if (!['all', 'students', 'teachers', 'form', 'selected'].includes(audience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
     if (audience === 'form' && !className) return res.status(400).json({ success: false, message: 'Select a form/class for this notice' });
     if (audience === 'selected' && recipientIds.length === 0) return res.status(400).json({ success: false, message: 'Select at least one recipient' });
     let attachment = null;
@@ -68,8 +68,12 @@ exports.createNotice = async (req, res) => {
       recipientIds: audience === 'selected' ? recipientIds : [], attachment,
       createdBy: req.user._id, createdByName: `${req.user.firstName} ${req.user.lastName}`, isActive: true,
     });
-    await db.collection('auditLogs').create({ user: req.user._id, action: 'CREATE_NOTICE', target: notice._id, details: `Created ${category} notice: ${title}` });
-    res.status(201).json({ success: true, notice });
+    try {
+      await db.collection('auditLogs').create({ user: req.user._id, action: 'CREATE_NOTICE', target: notice._id, details: `Created ${category} notice: ${title}` });
+    } catch (auditError) {
+      console.error('Notice saved, but audit log failed:', auditError.message);
+    }
+    res.status(201).json({ success: true, notice, message: 'Notice published successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
