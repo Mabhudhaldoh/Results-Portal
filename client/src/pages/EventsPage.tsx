@@ -11,20 +11,21 @@ interface Attachment {
 
 interface EventItem {
   _id: string; title: string; description?: string; date: string; time?: string;
-  location?: string; category?: string; attachment?: Attachment | null; createdAt: string;
+  location?: string; category?: string; audience?: string; recipientIds?: string[]; attachment?: Attachment | null; createdAt: string;
 }
 
 const CATEGORIES = ['academic', 'sports', 'holiday', 'club', 'other'];
 
 export default function EventsPage() {
   const { user } = useAuth();
-  const canManage = user?.role === 'admin' || user?.role === 'headmaster';
+  const canManage = user?.role === 'admin' || user?.role === 'headmaster' || user?.role === 'finance';
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [recipients, setRecipients] = useState<any[]>([]);
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming');
   const [showModal, setShowModal] = useState(false);
   const [edit, setEdit] = useState<EventItem | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', location: '', category: 'academic' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', location: '', category: 'academic', audience: 'all', recipientIds: [] as string[] });
 
   const today = new Date();
 
@@ -35,14 +36,18 @@ export default function EventsPage() {
       setEvents(list);
     });
   };
-  useEffect(() => { fetchEvents(); }, [view]);
+  useEffect(() => {
+    fetchEvents();
+    if (canManage) api.get('/events/recipients').then(r => setRecipients(r.data.recipients || [])).catch(() => toast.error('Unable to load recipient list'));
+  }, [view, canManage]);
 
-  const openCreate = () => { setEdit(null); setForm({ title: '', description: '', date: '', time: '', location: '', category: 'academic' }); setShowModal(true); };
-  const openEdit = (ev: EventItem) => { setEdit(ev); setForm({ title: ev.title, description: ev.description || '', date: ev.date, time: ev.time || '', location: ev.location || '', category: ev.category || 'academic' }); setShowModal(true); };
+  const openCreate = () => { setEdit(null); setForm({ title: '', description: '', date: '', time: '', location: '', category: 'academic', audience: 'all', recipientIds: [] }); setShowModal(true); };
+  const openEdit = (ev: EventItem) => { setEdit(ev); setForm({ title: ev.title, description: ev.description || '', date: ev.date?.slice(0, 10) || '', time: ev.time || '', location: ev.location || '', category: ev.category || 'academic', audience: ev.audience || 'all', recipientIds: ev.recipientIds || [] }); setShowModal(true); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.date) return toast.error('Title and date are required');
+    if (form.audience === 'selected' && form.recipientIds.length === 0) return toast.error('Select at least one person for this event');
     const fd = new FormData();
     fd.append('title', form.title);
     fd.append('description', form.description);
@@ -50,6 +55,8 @@ export default function EventsPage() {
     fd.append('time', form.time);
     fd.append('location', form.location);
     fd.append('category', form.category);
+    fd.append('audience', form.audience);
+    if (form.audience === 'selected') fd.append('recipientIds', JSON.stringify(form.recipientIds));
     if (fileRef.current?.files?.[0]) fd.append('file', fileRef.current.files[0]);
     try {
       if (edit) await api.put(`/events/${edit._id}`, fd);
@@ -152,6 +159,20 @@ export default function EventsPage() {
                     </select>
                   </div>
                 </div>
+                <div>
+                  <label className="label">Who can see this event?</label>
+                  <select className="input-field" value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value, recipientIds: e.target.value === 'selected' ? form.recipientIds : [] })}>
+                    <option value="all">Everyone</option><option value="students">Students only</option><option value="teachers">Staff only</option><option value="selected">Selected people (individuals or group)</option>
+                  </select>
+                </div>
+                {form.audience === 'selected' && <div className="space-y-2">
+                  <div className="flex items-center justify-between"><label className="label">Choose recipients</label><span className="text-xs text-gray-500">{form.recipientIds.length} selected</span></div>
+                  <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 p-2 space-y-1">
+                    {recipients.map(person => { const id = String(person._id); const checked = form.recipientIds.includes(id); return <label key={id} className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm cursor-pointer"><input type="checkbox" checked={checked} onChange={e => setForm({ ...form, recipientIds: e.target.checked ? [...form.recipientIds, id] : form.recipientIds.filter(x => x !== id) })} /><span className="flex-1">{person.firstName} {person.lastName} {person.admissionNumber ? '(' + person.admissionNumber + ')' : ''}</span><span className="text-xs capitalize text-gray-500">{person.role}</span></label>; })}
+                    {recipients.length === 0 && <p className="p-3 text-sm text-gray-500">Recipient list is loading or empty.</p>}
+                  </div>
+                  <p className="text-xs text-gray-500">Choose one or more accounts. Only selected people can see this event.</p>
+                </div>}
                 <div>
                   <label className="label">Attachment (optional)</label>
                   <input ref={fileRef} type="file" className="input-field" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,image/*,video/*,audio/*,.zip" />
