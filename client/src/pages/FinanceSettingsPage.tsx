@@ -3,6 +3,10 @@ import api from '../services/api';
 import { DollarSign, Save, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+function BouncingDots() {
+  return <span className="inline-flex items-center gap-1" role="status" aria-label="Saving in progress"><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" /></span>;
+}
+
 export default function FinanceSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,7 +49,7 @@ export default function FinanceSettingsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Finance Settings</h1>
           <p className="text-sm text-gray-500 mt-1">Manage fee defaults and fee-related student result access.</p>
         </div>
-        <button onClick={save} disabled={saving} className="btn-primary"><Save size={18} /> {saving ? 'Saving…' : 'Save Changes'}</button>
+        <button onClick={save} disabled={saving} className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">{saving ? <><BouncingDots /> Saving settings…</> : <><Save size={18} /> Save Changes</>}</button>
       </div>
       <div className="card space-y-5">
         <h2 className="text-lg font-semibold flex items-center gap-2"><DollarSign size={20} /> Fees Configuration</h2>
