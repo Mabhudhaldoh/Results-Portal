@@ -32,25 +32,47 @@ const catMeta: Record<string, { label: string; icon: any; cls: string }> = {
   emergency: { label: 'Emergency', icon: AlertTriangle, cls: 'bg-red-100 text-red-700 dark:bg-red-900/40' },
 };
 
+function BouncingDots() {
+  return <span className="inline-flex items-center gap-1" role="status" aria-label="Saving in progress"><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" /></span>;
+}
+
 export default function NoticesPage() {
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'headmaster' || user?.role === 'finance';
   const [notices, setNotices] = useState<Notice[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [recipients, setRecipients] = useState<any[]>([]);
+  const [recipientsLoaded, setRecipientsLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingNotices, setIsLoadingNotices] = useState(true);
   const [category, setCategory] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [edit, setEdit] = useState<Notice | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '', recipientIds: [] as string[] });
 
-  const fetchNotices = () => {
-    api.get(`/notices${category ? `?category=${category}` : ''}`).then(r => setNotices(r.data.notices || []));
+  const fetchNotices = async () => {
+    setIsLoadingNotices(true);
+    try {
+      const r = await api.get(`/notices${category ? `?category=${category}` : ''}`);
+      setNotices(r.data.notices || []);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Unable to load notices');
+    } finally { setIsLoadingNotices(false); }
+  };
+
+  const loadRecipients = async () => {
+    if (recipientsLoaded) return;
+    try {
+      const r = await api.get('/notices/recipients');
+      setRecipients(r.data.recipients || []);
+      setRecipientsLoaded(true);
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Unable to load recipient list'); }
   };
   useEffect(() => {
     fetchNotices();
     api.get('/classes').then(r => setClasses(r.data.classes || [])).catch(() => {});
-    if (canManage) api.get('/notices/recipients').then(r => setRecipients(r.data.recipients || [])).catch(() => toast.error('Unable to load recipient list'));
+    // Load the recipient directory only if the publisher chooses targeted delivery.
   }, [category, canManage]);
 
   const openCreate = () => { setEdit(null); setForm({ title: '', content: '', category: 'general', audience: 'all', priority: 'normal', className: '', recipientIds: [] }); setShowModal(true); };
@@ -70,14 +92,16 @@ export default function NoticesPage() {
     if (form.audience === 'form') fd.append('className', form.className);
     if (form.audience === 'selected') fd.append('recipientIds', JSON.stringify(form.recipientIds));
     if (fileRef.current?.files?.[0]) fd.append('file', fileRef.current.files[0]);
+    setIsSubmitting(true);
     try {
       if (edit) await api.put(`/notices/${edit._id}`, fd);
       else await api.post('/notices', fd);
-      toast.success(edit ? 'Notice updated' : 'Announcement published');
+      toast.success(edit ? 'Notice updated successfully' : 'Announcement published successfully');
       setShowModal(false);
       if (fileRef.current) fileRef.current.value = '';
       fetchNotices();
-    } catch (err: any) { toast.error(err.response?.data?.message || 'Error'); }
+    } catch (err: any) { toast.error(err.response?.data?.message || err.message || 'Unable to publish announcement'); }
+    finally { setIsSubmitting(false); }
   };
 
   const remove = async (id: string) => {
@@ -109,7 +133,9 @@ export default function NoticesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {notices.length === 0 ? (
+        {isLoadingNotices ? (
+          <div className="card col-span-2 flex items-center justify-center gap-3 py-12 text-gray-500"><BouncingDots /> Loading notices…</div>
+        ) : notices.length === 0 ? (
           <div className="card col-span-2 text-center text-gray-500 py-12">No notices published yet</div>
         ) : notices.map(n => {
           const meta = catMeta[n.category] || catMeta.general;
@@ -182,7 +208,7 @@ export default function NoticesPage() {
                   </div>
                   <div>
                     <label className="label">Audience</label>
-                    <select className="input-field" value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value })}>
+                    <select className="input-field" value={form.audience} onChange={e => { const audience = e.target.value; setForm({ ...form, audience }); if (audience === 'selected') void loadRecipients(); }}>
                       <option value="all">Everyone</option>
                       <option value="students">Students only</option>
                       <option value="teachers">Staff only</option>
