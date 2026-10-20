@@ -16,11 +16,18 @@ interface EventItem {
 
 const CATEGORIES = ['academic', 'sports', 'holiday', 'club', 'other'];
 
+function BouncingDots() {
+  return <span className="inline-flex items-center gap-1" role="status" aria-label="Saving in progress"><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.3s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce [animation-delay:-0.15s]" /><span className="h-1.5 w-1.5 rounded-full bg-current animate-bounce" /></span>;
+}
+
 export default function EventsPage() {
   const { user } = useAuth();
   const canManage = user?.role === 'admin' || user?.role === 'headmaster' || user?.role === 'finance';
   const [events, setEvents] = useState<EventItem[]>([]);
   const [recipients, setRecipients] = useState<any[]>([]);
+  const [recipientsLoaded, setRecipientsLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming');
   const [showModal, setShowModal] = useState(false);
   const [edit, setEdit] = useState<EventItem | null>(null);
@@ -29,16 +36,28 @@ export default function EventsPage() {
 
   const today = new Date();
 
-  const fetchEvents = () => {
-    api.get(`/events${view === 'upcoming' ? '?upcoming=true' : ''}`).then(r => {
+  const fetchEvents = async () => {
+    setIsLoadingEvents(true);
+    try {
+      const r = await api.get(`/events${view === 'upcoming' ? '?upcoming=true' : ''}`);
       let list: EventItem[] = r.data.events || [];
       if (view === 'past') list = list.filter(e => new Date(e.date) < today);
       setEvents(list);
-    });
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Unable to load events'); }
+    finally { setIsLoadingEvents(false); }
+  };
+
+  const loadRecipients = async () => {
+    if (recipientsLoaded) return;
+    try {
+      const r = await api.get('/events/recipients');
+      setRecipients(r.data.recipients || []);
+      setRecipientsLoaded(true);
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Unable to load recipient list'); }
   };
   useEffect(() => {
     fetchEvents();
-    if (canManage) api.get('/events/recipients').then(r => setRecipients(r.data.recipients || [])).catch(() => toast.error('Unable to load recipient list'));
+    // Load the recipient directory only if targeted delivery is selected.
   }, [view, canManage]);
 
   const openCreate = () => { setEdit(null); setForm({ title: '', description: '', date: '', time: '', location: '', category: 'academic', audience: 'all', recipientIds: [] }); setShowModal(true); };
@@ -58,14 +77,16 @@ export default function EventsPage() {
     fd.append('audience', form.audience);
     if (form.audience === 'selected') fd.append('recipientIds', JSON.stringify(form.recipientIds));
     if (fileRef.current?.files?.[0]) fd.append('file', fileRef.current.files[0]);
+    setIsSubmitting(true);
     try {
       if (edit) await api.put(`/events/${edit._id}`, fd);
       else await api.post('/events', fd);
-      toast.success(edit ? 'Event updated' : 'Event added to calendar');
+      toast.success(edit ? 'Event updated successfully' : 'Event published successfully');
       setShowModal(false);
       if (fileRef.current) fileRef.current.value = '';
       fetchEvents();
-    } catch (err: any) { toast.error(err.response?.data?.message || 'Error'); }
+    } catch (err: any) { toast.error(err.response?.data?.message || err.message || 'Unable to publish event'); }
+    finally { setIsSubmitting(false); }
   };
 
   const remove = async (id: string) => {
@@ -88,7 +109,9 @@ export default function EventsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {events.length === 0 ? (
+        {isLoadingEvents ? (
+          <div className="card col-span-full flex items-center justify-center gap-3 py-12 text-gray-500"><BouncingDots /> Loading events…</div>
+        ) : events.length === 0 ? (
           <div className="card col-span-full text-center text-gray-500 py-12">No events found</div>
         ) : events.map(ev => (
           <div key={ev._id} className="card">
@@ -161,7 +184,7 @@ export default function EventsPage() {
                 </div>
                 <div>
                   <label className="label">Who can see this event?</label>
-                  <select className="input-field" value={form.audience} onChange={e => setForm({ ...form, audience: e.target.value, recipientIds: e.target.value === 'selected' ? form.recipientIds : [] })}>
+                  <select className="input-field" value={form.audience} onChange={e => { const audience = e.target.value; setForm({ ...form, audience, recipientIds: audience === 'selected' ? form.recipientIds : [] }); if (audience === 'selected') void loadRecipients(); }}>
                     <option value="all">Everyone</option><option value="students">Students only</option><option value="teachers">Staff only</option><option value="selected">Selected people (individuals or group)</option>
                   </select>
                 </div>
@@ -178,7 +201,7 @@ export default function EventsPage() {
                   <input ref={fileRef} type="file" className="input-field" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,image/*,video/*,audio/*,.zip" />
                   <p className="text-xs text-gray-400 mt-1">PDF, Word, picture, video, MP3 or ZIP - up to 25MB.{edit && edit.attachment ? ' Existing attachment will be kept unless you choose a new file.' : ''}</p>
                 </div>
-                <button type="submit" className="btn-primary w-full justify-center">{edit ? 'Update' : 'Add Event'}</button>
+                <button type="submit" disabled={isSubmitting} className="btn-primary w-full justify-center disabled:opacity-60 disabled:cursor-not-allowed">{isSubmitting ? <><BouncingDots /> {edit ? 'Saving event…' : 'Publishing event…'}</> : (edit ? 'Update Event' : 'Publish Event')}</button>
               </form>
             </motion.div>
           </motion.div>
