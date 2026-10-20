@@ -199,7 +199,7 @@ export default function EventsPage() {
                 <div>
                   <label className="label">Attachment (optional)</label>
                   <input ref={fileRef} type="file" className="input-field" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,image/*,video/*,audio/*,.zip" />
-                  <p className="text-xs text-gray-400 mt-1">PDF, Word, picture, video, MP3 or ZIP - up to 25MB.{edit && edit.attachment ? ' Existing attachment will be kept unless you choose a new file.' : ''}</p>
+                  <p className="text-xs text-gray-400 mt-1">PDF, Word, picture, video, MP3 or ZIP - up to 4MB (Vercel upload limit).{edit && edit.attachment ? ' Existing attachment will be kept unless you choose a new file.' : ''}</p>
                 </div>
                 <button type="submit" disabled={isSubmitting} className="btn-primary w-full justify-center disabled:opacity-60 disabled:cursor-not-allowed">{isSubmitting ? <><BouncingDots /> {edit ? 'Saving event…' : 'Publishing event…'}</> : (edit ? 'Update Event' : 'Publish Event')}</button>
               </form>
