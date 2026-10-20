@@ -26,6 +26,7 @@ import ApprovalsPage from './pages/ApprovalsPage';
 import FeedbackPage from './pages/FeedbackPage';
 import BulkReportsPage from './pages/BulkReportsPage';
 import FinancePage from './pages/FinancePage';
+import FinanceSettingsPage from './pages/FinanceSettingsPage';
 import FinanceBlockPage from './pages/FinanceBlockPage';
 import PendingFeesPage from './pages/PendingFeesPage';
 import AttendancePage from './pages/AttendancePage';
@@ -40,6 +41,11 @@ function RoleGuard({ children, allowed }: { children: React.ReactNode; allowed: 
   if (loading) return <div className="h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-mlk-red border-t-transparent rounded-full animate-spin"></div></div>;
   if (!user || !allowed.includes(user.role)) return <Navigate to="/dashboard" />;
   return <>{children}</>;
+}
+
+function FinanceSettingsRoute({ admin, finance }: { admin: React.ReactNode; finance: React.ReactNode }) {
+  const { user } = useAuth();
+  return <>{user?.role === 'finance' ? finance : admin}</>;
 }
 
 export default function App() {
@@ -60,10 +66,10 @@ export default function App() {
               <Route path="departments" element={<RoleGuard allowed={['admin']}><DepartmentsPage /></RoleGuard>} />
               <Route path="results" element={<RoleGuard allowed={['admin', 'teacher', 'headmaster']}><ResultsPage /></RoleGuard>} />
               <Route path="grading" element={<RoleGuard allowed={['admin']}><GradingPage /></RoleGuard>} />
-              <Route path="reports" element={<RoleGuard allowed={['admin', 'teacher', 'headmaster']}><ReportsPage /></RoleGuard>} />
+              <Route path="reports" element={<RoleGuard allowed={['admin', 'teacher', 'headmaster', 'finance']}><ReportsPage /></RoleGuard>} />
               <Route path="analytics" element={<RoleGuard allowed={['admin', 'headmaster']}><AnalyticsPage /></RoleGuard>} />
               <Route path="academic" element={<RoleGuard allowed={['admin']}><AcademicPage /></RoleGuard>} />
-              <Route path="settings" element={<RoleGuard allowed={['admin']}><SettingsPage /></RoleGuard>} />
+              <Route path="settings" element={<RoleGuard allowed={['admin', 'finance']}>{/* Finance users receive a restricted finance-only settings page. */}<FinanceSettingsRoute admin={<SettingsPage />} finance={<FinanceSettingsPage />} /></RoleGuard>} />
               <Route path="my-results" element={<StudentResultsPage />} />
               <Route path="report-card" element={<ReportCardPage />} />
               <Route path="enter-marks" element={<RoleGuard allowed={['teacher']}><EnterMarksPage /></RoleGuard>} />
