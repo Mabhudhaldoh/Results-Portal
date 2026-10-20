@@ -3,13 +3,14 @@ const MANAGERS = ['admin', 'headmaster', 'finance'];
 
 exports.getEventRecipients = async (req, res) => {
   try {
-    const users = await db.collection('users').find({ isActive: true });
+    const users = await db.collection('users').find({});
     const recipients = users
-      .filter(u => ['student', 'teacher', 'finance', 'headmaster', 'admin'].includes(u.role))
+      .filter(u => u.isActive !== false && ['student', 'teacher', 'finance', 'headmaster', 'admin'].includes(u.role))
       .map(u => ({ _id: u._id, firstName: u.firstName || '', lastName: u.lastName || '', role: u.role, admissionNumber: u.admissionNumber || '' }));
     res.json({ success: true, recipients });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Event operation failed:', error);
+    res.status(500).json({ success: false, message: error.message || 'Unable to save event. Please try again.' });
   }
 };
 
@@ -49,8 +50,12 @@ exports.createEvent = async (req, res) => {
       audience, recipientIds: audience === 'selected' ? recipientIds : [], attachment,
       createdBy: req.user._id, createdByName: `${req.user.firstName} ${req.user.lastName}`,
     });
-    await db.collection('auditLogs').create({ user: req.user._id, action: 'CREATE_EVENT', target: event._id, details: `Created event: ${title}` });
-    res.status(201).json({ success: true, event });
+    try {
+      await db.collection('auditLogs').create({ user: req.user._id, action: 'CREATE_EVENT', target: event._id, details: `Created event: ${title}` });
+    } catch (auditError) {
+      console.error('Event saved, but audit log failed:', auditError.message);
+    }
+    res.status(201).json({ success: true, event, message: 'Event published successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
