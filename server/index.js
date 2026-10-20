@@ -74,7 +74,7 @@ app.get('/api/uploads/:id', async (req, res) => {
     const file = files[0];
     const contentType = file.metadata?.contentType || file.contentType || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', 'inline; filename="' + String(file.metadata?.originalName || file.filename || 'attachment').replace(/["\\\\\\r\\n]/g, '_') + '"');
+    res.setHeader('Content-Disposition', 'inline; filename="' + String(file.metadata?.originalName || file.filename || 'attachment').replace(/[^a-zA-Z0-9._-]/g, '_') + '"');
     res.setHeader('Cache-Control', 'private, max-age=300');
     const stream = bucket.openDownloadStream(fileId);
     stream.on('error', error => {
