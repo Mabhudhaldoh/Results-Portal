@@ -7,7 +7,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 
 router.use(protect);
 
-router.route('/').get(authorize('admin', 'teacher'), getStudents).post(authorize('admin'), createStudent);
+router.route('/').get(authorize('admin', 'teacher', 'headmaster', 'finance'), getStudents).post(authorize('admin'), createStudent);
 router.post('/bulk', authorize('admin'), bulkCreateStudents);
 router.post('/bulk-quick', authorize('admin'), bulkQuickCreate);
 router.post('/upload-excel', authorize('admin'), upload.single('file'), uploadExcelStudents);
