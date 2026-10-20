@@ -61,6 +61,34 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 
+// Persistent attachment downloads stored in MongoDB GridFS (not the read-only Vercel filesystem).
+app.get('/api/uploads/:id', async (req, res) => {
+  try {
+    const { ObjectId, GridFSBucket } = require('mongodb');
+    if (!ObjectId.isValid(req.params.id)) return res.status(404).json({ success: false, message: 'Attachment not found' });
+    const database = require('./config/db').getDB();
+    const bucket = new GridFSBucket(database, { bucketName: 'portalUploads' });
+    const fileId = new ObjectId(req.params.id);
+    const files = await bucket.find({ _id: fileId }).limit(1).toArray();
+    if (!files.length) return res.status(404).json({ success: false, message: 'Attachment not found' });
+    const file = files[0];
+    const contentType = file.metadata?.contentType || file.contentType || 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', 'inline; filename="' + String(file.metadata?.originalName || file.filename || 'attachment').replace(/["\\\\\\r\\n]/g, '_') + '"');
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    const stream = bucket.openDownloadStream(fileId);
+    stream.on('error', error => {
+      console.error('Attachment download failed:', error.message);
+      if (!res.headersSent) res.status(404).end('Attachment not found');
+      else res.end();
+    });
+    stream.pipe(res);
+  } catch (error) {
+    console.error('Attachment route failed:', error.message);
+    if (!res.headersSent) res.status(500).json({ success: false, message: 'Unable to load attachment' });
+  }
+});
+
 // Static Files
 app.use('/uploads', express.static(
   path.join(__dirname, 'uploads')
