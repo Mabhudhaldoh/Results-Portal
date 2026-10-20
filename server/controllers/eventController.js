@@ -1,10 +1,28 @@
 const db = require("../config/database");
+const MANAGERS = ['admin', 'headmaster', 'finance'];
+
+exports.getEventRecipients = async (req, res) => {
+  try {
+    const users = await db.collection('users').find({ isActive: true });
+    const recipients = users
+      .filter(u => ['student', 'teacher', 'finance', 'headmaster', 'admin'].includes(u.role))
+      .map(u => ({ _id: u._id, firstName: u.firstName || '', lastName: u.lastName || '', role: u.role, admissionNumber: u.admissionNumber || '' }));
+    res.json({ success: true, recipients });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 exports.getEvents = async (req, res) => {
   try {
     const { upcoming } = req.query;
     let events = await db.collection('events').find();
     events.sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (req.user.role === 'student') {
+      events = events.filter(e => e.audience !== 'teachers' && (e.audience !== 'selected' || (e.recipientIds || []).includes(req.user._id)));
+    } else if (!MANAGERS.includes(req.user.role)) {
+      events = events.filter(e => e.audience !== 'students' && (e.audience !== 'selected' || (e.recipientIds || []).includes(req.user._id)));
+    }
     if (upcoming === 'true') {
       const now = new Date();
       events = events.filter(e => new Date(e.date) >= new Date(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -17,13 +35,18 @@ exports.getEvents = async (req, res) => {
 
 exports.createEvent = async (req, res) => {
   try {
-    const { title, description, date, time, location, category = 'other' } = req.body;
+    const { title, description, date, time, location, category = 'other', audience = 'all' } = req.body;
+    let recipientIds = req.body.recipientIds || [];
+    if (typeof recipientIds === 'string') { try { recipientIds = JSON.parse(recipientIds); } catch { recipientIds = []; } }
+    if (!Array.isArray(recipientIds)) recipientIds = [];
     if (!title || !date) return res.status(400).json({ success: false, message: 'Title and date are required' });
+    if (!['all', 'students', 'teachers', 'selected'].includes(audience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
+    if (audience === 'selected' && recipientIds.length === 0) return res.status(400).json({ success: false, message: 'Select at least one recipient' });
     let attachment = null;
     if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
     const event = await db.collection('events').create({
       title, description: description || '', date, time: time || '', location: location || '', category,
-      attachment,
+      audience, recipientIds: audience === 'selected' ? recipientIds : [], attachment,
       createdBy: req.user._id, createdByName: `${req.user.firstName} ${req.user.lastName}`,
     });
     await db.collection('auditLogs').create({ user: req.user._id, action: 'CREATE_EVENT', target: event._id, details: `Created event: ${title}` });
@@ -37,9 +60,16 @@ exports.updateEvent = async (req, res) => {
   try {
     const event = await db.collection('events').findById(req.params.id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
-    const { title, description, date, time, location, category } = req.body;
+    const { title, description, date, time, location, category, audience } = req.body;
+    let recipientIds = req.body.recipientIds;
+    if (typeof recipientIds === 'string') { try { recipientIds = JSON.parse(recipientIds); } catch { recipientIds = []; } }
+    if (recipientIds !== undefined && !Array.isArray(recipientIds)) recipientIds = [];
     let attachment = event.attachment || null;
     if (req.file) attachment = { url: '/uploads/' + req.file.filename, name: req.file.originalname, type: req.file.mimetype };
+    const newAudience = audience ?? event.audience ?? 'all';
+    const newRecipientIds = newAudience === 'selected' ? (recipientIds ?? event.recipientIds ?? []) : [];
+    if (!['all', 'students', 'teachers', 'selected'].includes(newAudience)) return res.status(400).json({ success: false, message: 'Invalid audience' });
+    if (newAudience === 'selected' && newRecipientIds.length === 0) return res.status(400).json({ success: false, message: 'Select at least one recipient' });
     const updated = await db.collection('events').findByIdAndUpdate(req.params.id, {
       title: title ?? event.title,
       description: description ?? event.description,
@@ -47,6 +77,8 @@ exports.updateEvent = async (req, res) => {
       time: time ?? event.time,
       location: location ?? event.location,
       category: category ?? event.category,
+      audience: newAudience,
+      recipientIds: newRecipientIds,
       attachment,
     });
     res.json({ success: true, event: updated });
