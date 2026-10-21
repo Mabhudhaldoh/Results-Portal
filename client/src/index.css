@@ -227,3 +227,27 @@ textarea:focus-visible {
   color: #eaf1fb !important;
   border-color: #557092 !important;
 }
+
+
+/* Dashboard-wide text contrast (including page titles and helper text outside cards). */
+.app-main .text-gray-900,
+.app-main .text-gray-800,
+.app-main .text-gray-700,
+.app-main .text-slate-900,
+.app-main .text-slate-800 {
+  color: #f8fafc !important;
+}
+.app-main .text-gray-600,
+.app-main .text-gray-500,
+.app-main .text-gray-400,
+.app-main .text-slate-600,
+.app-main .text-slate-500,
+.app-main .text-slate-400 {
+  color: #c1cde0 !important;
+}
+.app-main .border-gray-200,
+.app-main .border-gray-300,
+.app-main .border-slate-200,
+.app-main .border-slate-300 {
+  border-color: #2b4569 !important;
+}
