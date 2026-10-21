@@ -33,7 +33,7 @@ export default function Navbar() {
 
   return (
     <>
-    <header className="h-16 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="app-navbar h-16 backdrop-blur border-b shadow-sm flex items-center justify-between px-6 sticky top-0 z-30">
       <div className="flex items-center gap-4 flex-1 ml-12 lg:ml-0">
         <div className="relative hidden md:flex flex-1 max-w-md">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
