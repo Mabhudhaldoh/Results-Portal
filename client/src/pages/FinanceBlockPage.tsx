@@ -7,9 +7,6 @@ export default function FinanceBlockPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [settings, setSettings] = useState<any>(null);
-  const [feesViewPercentage, setFeesViewPercentage] = useState(50);
-  const [feesBlockingEnabled, setFeesBlockingEnabled] = useState(true);
 
   const fetchData = async () => {
     try {
@@ -117,9 +114,9 @@ export default function FinanceBlockPage() {
                       <td className="px-4 py-3 text-sm text-right">
                         <div className="flex items-center justify-end gap-2">
                           <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div className={`h-2 rounded-full ${paidPct >= feesViewPercentage ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min(paidPct, 100)}%` }}></div>
+                            <div className={`h-2 rounded-full ${allowed ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min(paidPct, 100)}%` }}></div>
                           </div>
-                          <span className={`text-xs font-medium ${paidPct >= feesViewPercentage ? 'text-green-600' : 'text-red-600'}`}>{paidPct}%</span>
+                          <span className={`text-xs font-medium ${allowed ? 'text-green-600' : 'text-red-600'}`}>{paidPct}%</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
