@@ -32,7 +32,15 @@ exports.getResults = async (req, res) => {
     if (teacher) results = results.filter(r => r.teacher === teacher);
 
     if (req.user.role === 'teacher') results = results.filter(r => r.teacher === req.user._id);
-    if (req.user.role === 'student') results = results.filter(r => r.student === req.user._id);
+    if (req.user.role === 'student') {
+      const student = await db.collection('users').findById(req.user._id);
+      const feeAccess = await require('../utils/studentFeeAccess').getStudentFeeAccess(student);
+      const visibility = await require('../utils/resultsVisibility').getResultsVisibility();
+      if (!feeAccess.canViewResults || !visibility.visible) {
+        return res.json({ success: true, results: [], visible: false, message: !visibility.visible ? visibility.message : feeAccess.resultsAccessMessage });
+      }
+      results = results.filter(r => r.student === req.user._id && r.status === 'published');
+    }
 
     results = await Promise.all(results.map(async r => {
       const out = { ...r };
@@ -310,6 +318,11 @@ exports.getStudentResults = async (req, res) => {
     const visibility = await require('../utils/resultsVisibility').getResultsVisibility();
     if (!visibility.visible) {
       return res.json({ success: true, results: [], visible: false, message: visibility.message });
+    }
+    const student = await db.collection('users').findById(req.user._id);
+    const feeAccess = await require('../utils/studentFeeAccess').getStudentFeeAccess(student);
+    if (!feeAccess.canViewResults) {
+      return res.json({ success: true, results: [], visible: false, message: feeAccess.resultsAccessMessage, feeAccess });
     }
     let results = await db.collection('results').find({ student: req.user._id, status: 'published' });
     if (academicYear) results = results.filter(r => r.academicYear === academicYear);
