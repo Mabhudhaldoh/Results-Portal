@@ -45,27 +45,23 @@ exports.getDashboard = async (req, res) => {
     let resultsHiddenMessage = null;
     if (req.user.role === 'student') {
       const visibility = await require('../utils/resultsVisibility').getResultsVisibility();
-      if (visibility.visible) {
+      const student = await db.collection('users').findById(req.user._id);
+      const feeAccess = await require('../utils/studentFeeAccess').getStudentFeeAccess(student);
+      if (!visibility.visible) {
+        resultsHiddenMessage = visibility.message;
+      } else if (!feeAccess.canViewResults) {
+        resultsHiddenMessage = feeAccess.resultsAccessMessage;
+      } else {
         studentResults = allResults.filter(r => r.student === req.user._id && r.status === 'published').slice(0, 10);
         studentResults = await Promise.all(studentResults.map(async r => ({
           ...r,
           subject: await db.collection('subjects').findById(r.subject) || null,
         })));
-      } else {
-        resultsHiddenMessage = visibility.message;
       }
-
-      const student = await db.collection('users').findById(req.user._id);
-      const settingsArr = await db.collection('settings').find();
-      const settings = settingsArr[0] || {};
       const required = student?.feesRequired || 0;
       const paid = student?.feesPaid || 0;
-      const balance = required - paid;
       const paidPercentage = required > 0 ? Math.round((paid / required) * 100) : 100;
-      feesStatus = {
-        feesRequired: required, feesPaid: paid, feesBalance: balance,
-        paidPercentage, canViewResults: paid >= required || paidPercentage >= (settings.feesViewPercentage || 50),
-      };
+      feesStatus = { ...feeAccess, paidPercentage };
     }
 
     let latestNotices = (await db.collection('notices').find({ isActive: true }))
