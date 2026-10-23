@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { ShieldCheck, Eye, EyeOff, Search, Save, Settings, CheckCircle, Clock } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, Search, Settings, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function FinanceBlockPage() {
@@ -13,27 +13,13 @@ export default function FinanceBlockPage() {
 
   const fetchData = async () => {
     try {
-      const [studentsRes, settingsRes] = await Promise.all([
-        api.get(`/students?search=${search}`),
-        api.get('/settings'),
-      ]);
-      setStudents(studentsRes.data.students);
-      const s = settingsRes.data.settings;
-      setSettings(s);
-      setFeesViewPercentage(s?.feesViewPercentage || 50);
-      setFeesBlockingEnabled(s?.feesBlockingEnabled !== false);
+      const studentsRes = await api.get(`/students?search=${search}`);
+      setStudents(studentsRes.data.students || []);
     } catch { }
     setLoading(false);
   };
 
   useEffect(() => { fetchData(); }, [search]);
-
-  const handleSaveSettings = async () => {
-    try {
-      await api.put('/settings', { feesViewPercentage, feesBlockingEnabled });
-      toast.success('Settings saved');
-    } catch (err: any) { toast.error('Failed to save'); }
-  };
 
   const canViewResults = (s: any) => {
     const balance = Math.max(0, (s.feesRequired || 0) - (s.feesPaid || 0));
@@ -61,29 +47,10 @@ export default function FinanceBlockPage() {
         </h1>
       </div>
 
-      <div className="card space-y-4">
-        <h2 className="text-lg font-semibold flex items-center gap-2"><Settings size={18} /> Fees Threshold Configuration</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="label">Minimum Payment Percentage to View Results</label>
-            <div className="flex items-center gap-3">
-              <input type="range" min="0" max="100" value={feesViewPercentage} onChange={e => setFeesViewPercentage(+e.target.value)} className="flex-1" />
-              <span className="text-lg font-bold text-mlk-red w-16 text-right">{feesViewPercentage}%</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Students must pay at least {feesViewPercentage}% of their fees to view results</p>
-          </div>
-          <div>
-            <label className="label">Fees Blocking</label>
-            <div className="flex items-center gap-3 mt-2">
-              <button onClick={() => setFeesBlockingEnabled(!feesBlockingEnabled)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${feesBlockingEnabled ? 'bg-mlk-red' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${feesBlockingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-              <span className="text-sm font-medium">{feesBlockingEnabled ? 'Enabled' : 'Disabled'}</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">When disabled, all students can view results regardless of fees</p>
-          </div>
-        </div>
-        <button onClick={handleSaveSettings} className="btn-primary"><Save size={16} /> Save Settings</button>
+      <div className="card space-y-2">
+        <h2 className="text-lg font-semibold flex items-center gap-2"><Settings size={18} /> Student Results Access Policy</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Students with a fees balance below $100 can view their published results automatically.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">For a balance of $100 or more, Finance must approve the individual student first. The Headmaster can then grant or revoke access for that student. Both approvals are required.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
