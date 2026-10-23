@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Upload, Send, Lock, Unlock, Eye, EyeOff, Trash2, Download, Filter, Edit2, X, FileSpreadsheet, ShieldCheck } from 'lucide-react';
+import { Plus, Upload, Send, Lock, Unlock, EyeOff, Trash2, Download, Edit2, X, ShieldCheck, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
@@ -146,20 +146,20 @@ export default function ResultsPage() {
   };
 
   const confirmPublish = async () => {
-    if (publishForm.indefinite) {
-      await api.put('/results/publish', { ids: selected });
-      toast.success(`Published ${selected.length} results`);
-    } else {
-      await api.put('/results/publish', {
-        ids: selected,
-        scheduleFrom: publishForm.from ? new Date(publishForm.from).toISOString() : new Date().toISOString(),
-        hideAfter: publishForm.to ? new Date(publishForm.to).toISOString() : null,
-      });
-      toast.success(`Published ${selected.length} results with a viewing window`);
+    try {
+      const payload: any = { ids: selected };
+      if (!publishForm.indefinite) {
+        payload.scheduleFrom = publishForm.from ? new Date(publishForm.from).toISOString() : new Date().toISOString();
+        payload.hideAfter = publishForm.to ? new Date(publishForm.to).toISOString() : null;
+      }
+      const response = await api.put('/results/publish', payload);
+      toast.success(response.data.message || `Published ${selected.length} verified results`);
+      setShowPublishModal(false);
+      setSelected([]);
+      fetchResults();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not publish results. Verify them first.');
     }
-    setShowPublishModal(false);
-    setSelected([]);
-    fetchResults();
   };
   const deleteBulkSelected = async () => {
     if (selected.length === 0) return;
@@ -172,8 +172,22 @@ export default function ResultsPage() {
   const lockSelected = async () => { if (selected.length === 0) return; await api.put('/results/lock', { ids: selected }); toast.success(`Locked ${selected.length}`); setSelected([]); fetchResults(); };
   const unlockSelected = async () => { if (selected.length === 0) return; await api.put('/results/unlock', { ids: selected }); toast.success(`Unlocked ${selected.length}`); setSelected([]); fetchResults(); };
   const hideSelected = async () => { if (selected.length === 0) return; await api.put('/results/hide', { ids: selected }); toast.success(`Hidden ${selected.length}`); setSelected([]); fetchResults(); };
-  const verifySelected = async () => { if (selected.length === 0) return; await api.put('/results/verify', { ids: selected }); toast.success(`Verified ${selected.length}`); setSelected([]); fetchResults(); };
-  const unverifySelected = async () => { if (selected.length === 0) return; await api.put('/results/unverify', { ids: selected }); toast.success(`Unverified ${selected.length}`); setSelected([]); fetchResults(); };
+  const verifySelected = async () => {
+    if (selected.length === 0) return;
+    try {
+      const response = await api.put('/results/verify', { ids: selected });
+      toast.success(response.data.message || 'Selected results verified');
+      setSelected([]); fetchResults();
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Could not verify results'); }
+  };
+  const unverifySelected = async () => {
+    if (selected.length === 0) return;
+    try {
+      const response = await api.put('/results/unverify', { ids: selected });
+      toast.success(response.data.message || 'Selected results returned for review');
+      setSelected([]); fetchResults();
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Could not unverify results'); }
+  };
   const deleteResult = async (id: string) => { if (!confirm('Delete this result?')) return; await api.delete(`/results/${id}`); toast.success('Deleted'); fetchResults(); };
 
   const toggleSelect = (id: string) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -193,7 +207,6 @@ export default function ResultsPage() {
         <div className="flex gap-2 flex-wrap">
           {user?.role === 'admin' && (
             <>
-              <button onClick={publishSelected} disabled={selected.length === 0} className="btn-success text-sm"><Send size={16} /> Publish ({selected.length})</button>
               <button onClick={deleteBulkSelected} disabled={selected.length === 0} className="btn-danger text-sm"><Trash2 size={16} /> Delete ({selected.length})</button>
               <button onClick={lockSelected} disabled={selected.length === 0} className="btn-outline text-sm"><Lock size={16} /> Lock</button>
               <button onClick={unlockSelected} disabled={selected.length === 0} className="btn-outline text-sm"><Unlock size={16} /> Unlock</button>
@@ -202,12 +215,25 @@ export default function ResultsPage() {
           )}
           {user?.role === 'headmaster' && (
             <>
-              <button onClick={verifySelected} disabled={selected.length === 0} className="btn-success text-sm"><ShieldCheck size={16} /> Verify ({selected.length})</button>
-              <button onClick={unverifySelected} disabled={selected.length === 0} className="btn-outline text-sm"><EyeOff size={16} /> Unverify</button>
+              <button onClick={verifySelected} disabled={selected.length === 0} className="btn-primary text-sm"><ShieldCheck size={16} /> Verify Selected ({selected.length})</button>
+              <button onClick={unverifySelected} disabled={selected.length === 0} className="btn-outline text-sm"><EyeOff size={16} /> Return for Review</button>
+              <button onClick={publishSelected} disabled={selected.length === 0} className="btn-success text-sm"><Send size={16} /> Publish Verified ({selected.length})</button>
             </>
           )}
-          <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm"><Plus size={16} /> Add Result</button>
-          <button onClick={() => setShowUploadModal(true)} className="btn-secondary text-sm"><Upload size={16} /> Upload Excel</button>
+          {(user?.role === 'admin' || user?.role === 'teacher') && (
+            <>
+              <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm"><Plus size={16} /> Add Result</button>
+              <button onClick={() => setShowUploadModal(true)} className="btn-secondary text-sm"><Upload size={16} /> Upload Excel</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 p-4 flex items-start gap-3">
+        <Info size={20} className="text-blue-600 dark:text-blue-300 mt-0.5 flex-shrink-0" />
+        <div className="text-sm text-blue-900 dark:text-blue-100">
+          <p className="font-semibold">Results release workflow</p>
+          <p className="mt-1">New marks remain Draft until the Headmaster verifies them. Only the Headmaster can publish verified results to students. Select result rows using the checkboxes, then choose the operation above.</p>
         </div>
       </div>
 
@@ -270,8 +296,8 @@ export default function ResultsPage() {
                     <td className="px-4 py-3">{statusBadge(r.status)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
-                        {r.status !== 'locked' && <button onClick={() => openEdit(r)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg text-blue-600"><Edit2 size={16} /></button>}
-                        {user?.role === 'admin' && <button onClick={() => deleteResult(r._id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-red-600"><Trash2 size={16} /></button>}
+                        {(user?.role === 'admin' || user?.role === 'teacher') && r.status !== 'locked' && <button title="Edit result" onClick={() => openEdit(r)} className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg text-blue-600"><Edit2 size={16} /></button>}
+                        {user?.role === 'admin' && <button title="Delete result" onClick={() => deleteResult(r._id)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-red-600"><Trash2 size={16} /></button>}
                       </div>
                     </td>
                   </tr>
