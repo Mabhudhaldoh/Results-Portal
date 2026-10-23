@@ -13,6 +13,7 @@ export default function ReportCardPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [feesStatus, setFeesStatus] = useState<any>(null);
   const [showBlocked, setShowBlocked] = useState(false);
+  const [hiddenMessage, setHiddenMessage] = useState('');
   const [students, setStudents] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState('');
   const cardRef = useRef<HTMLDivElement>(null);
@@ -36,6 +37,7 @@ export default function ReportCardPage() {
         setFeesStatus(status);
       } catch {}
       if (!canSelectStudent && status && status.canViewResults === false) {
+        setHiddenMessage(status.resultsAccessMessage || 'Please contact the school office about your results access.');
         setShowBlocked(true);
         setLoading(false);
         return;
@@ -68,7 +70,7 @@ export default function ReportCardPage() {
           <AlertTriangle size={36} className="text-red-500" />
         </div>
         <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Report Card Access Restricted</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">You have not met the minimum fees payment required to view your report card.</p>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">{hiddenMessage || "Your fees balance currently does not qualify for report-card access."}</p>
         <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 text-sm">
           <div className="grid grid-cols-3 gap-4 mb-3">
             <div><p className="text-gray-500">Required</p><p className="font-bold">${feesStatus?.feesRequired || 0}</p></div>
@@ -76,14 +78,8 @@ export default function ReportCardPage() {
             <div><p className="text-gray-500">Balance</p><p className="font-bold text-red-600">${feesStatus?.feesBalance || 0}</p></div>
           </div>
           <div className="border-t pt-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">Payment Progress</span>
-              <span className="font-bold">{feesStatus?.paidPercentage || 0}% of {feesStatus?.feesViewPercentage || 50}% required</span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mt-2">
-              <div className={`h-3 rounded-full ${(feesStatus?.paidPercentage || 0) >= (feesStatus?.feesViewPercentage || 50) ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min(feesStatus?.paidPercentage || 0, 100)}%` }}></div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">You need to pay at least {feesStatus?.feesViewPercentage || 50}% of your total fees to access your report card</p>
+            <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Access policy</p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">Balances below $100 qualify automatically. For balances of $100 or more, Finance approval and a Headmaster override are both required.</p>
           </div>
         </div>
         <p className="text-sm text-gray-500 mt-4">Please contact the school finance office to settle your fees balance.</p>
