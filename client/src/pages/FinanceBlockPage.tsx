@@ -84,7 +84,8 @@ export default function FinanceBlockPage() {
                 <th className="px-4 py-3 text-right">Paid</th>
                 <th className="px-4 py-3 text-right">Balance</th>
                 <th className="px-4 py-3 text-right">Paid %</th>
-                <th className="px-4 py-3">Results Access</th>\n                <th className="px-4 py-3">Finance Approval</th>
+                <th className="px-4 py-3">Results Access</th>
+                <th className="px-4 py-3">Finance Approval</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
