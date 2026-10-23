@@ -89,12 +89,21 @@ exports.updateResult = async (req, res) => {
     if (result.status === 'locked') {
       return res.status(400).json({ success: false, message: 'Result is locked and cannot be edited' });
     }
+    const previousStatus = result.status;
     Object.assign(result, req.body);
     result.finalMark = calcFinalMark(result.termMark, result.examMark, result.projectMark);
     const gradeInfo = await applyGrade(result.finalMark);
     Object.assign(result, gradeInfo);
+    if (['verified', 'published', 'hidden'].includes(previousStatus)) {
+      // Editing invalidates any previous verification/publication decision.
+      result.status = 'draft';
+      result.verifiedBy = null;
+      result.verifiedAt = null;
+      result.publishedBy = null;
+      result.publishedAt = null;
+    }
     await db.collection('results').save(result);
-    res.json({ success: true, result });
+    res.json({ success: true, result, message: result.status === 'draft' ? 'Result updated and returned to draft for Headmaster verification' : 'Result updated' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -167,9 +176,31 @@ exports.uploadExcel = async (req, res) => {
 exports.publishResults = async (req, res) => {
   try {
     const { ids, scheduleFrom, hideAfter } = req.body;
+    if (req.user.role !== 'headmaster') {
+      return res.status(403).json({ success: false, message: 'Only the Headmaster can publish results.' });
+    }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Select at least one verified result to publish.' });
+    }
+
+    const selectedResults = [];
     for (const id of ids) {
-      const r = await db.collection('results').findById(id);
-      if (r) { r.status = 'published'; await db.collection('results').save(r); }
+      const result = await db.collection('results').findById(id);
+      if (!result) return res.status(404).json({ success: false, message: 'A selected result could not be found. Refresh and try again.' });
+      if (result.status !== 'verified') {
+        return res.status(400).json({
+          success: false,
+          message: 'Publication blocked: every selected result must first be verified by the Headmaster. At least one selected result is not verified.'
+        });
+      }
+      selectedResults.push(result);
+    }
+
+    for (const result of selectedResults) {
+      result.status = 'published';
+      result.publishedBy = req.user._id;
+      result.publishedAt = new Date().toISOString();
+      await db.collection('results').save(result);
     }
 
     if (scheduleFrom || hideAfter) {
@@ -191,7 +222,7 @@ exports.publishResults = async (req, res) => {
     }
 
     await db.collection('auditLogs').create({ user: req.user._id, action: 'PUBLISH_RESULTS', details: `Published ${ids.length} results` });
-    res.json({ success: true, message: 'Results published' });
+    res.json({ success: true, message: `Published ${selectedResults.length} Headmaster-verified result(s).` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -269,12 +300,21 @@ exports.deleteResult = async (req, res) => {
 exports.verifyResults = async (req, res) => {
   try {
     const { ids } = req.body;
-    for (const id of ids) {
-      const r = await db.collection('results').findById(id);
-      if (r) { r.status = 'verified'; await db.collection('results').save(r); }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Select at least one result to verify.' });
     }
-    await db.collection('auditLogs').create({ user: req.user._id, action: 'VERIFY_RESULTS', details: `Verified ${ids.length} results` });
-    res.json({ success: true, message: 'Results verified' });
+    let verified = 0;
+    for (const id of ids) {
+      const result = await db.collection('results').findById(id);
+      if (!result || !['draft', 'submitted'].includes(result.status)) continue;
+      result.status = 'verified';
+      result.verifiedBy = req.user._id;
+      result.verifiedAt = new Date().toISOString();
+      await db.collection('results').save(result);
+      verified++;
+    }
+    await db.collection('auditLogs').create({ user: req.user._id, action: 'VERIFY_RESULTS', details: `Verified ${verified} result(s)` });
+    res.json({ success: true, message: `Verified ${verified} result(s). Only these verified results can be published.` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -283,12 +323,23 @@ exports.verifyResults = async (req, res) => {
 exports.unverifyResults = async (req, res) => {
   try {
     const { ids } = req.body;
-    for (const id of ids) {
-      const r = await db.collection('results').findById(id);
-      if (r) { r.status = 'submitted'; await db.collection('results').save(r); }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'Select at least one result to return for review.' });
     }
-    await db.collection('auditLogs').create({ user: req.user._id, action: 'UNVERIFY_RESULTS', details: `Unverified ${ids.length} results` });
-    res.json({ success: true, message: 'Results unverified' });
+    let returned = 0;
+    for (const id of ids) {
+      const result = await db.collection('results').findById(id);
+      if (!result || !['verified', 'published'].includes(result.status)) continue;
+      result.status = 'submitted';
+      result.verifiedBy = null;
+      result.verifiedAt = null;
+      result.publishedBy = null;
+      result.publishedAt = null;
+      await db.collection('results').save(result);
+      returned++;
+    }
+    await db.collection('auditLogs').create({ user: req.user._id, action: 'UNVERIFY_RESULTS', details: `Returned ${returned} result(s) for review` });
+    res.json({ success: true, message: `Returned ${returned} result(s) for review. They are no longer published.` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
