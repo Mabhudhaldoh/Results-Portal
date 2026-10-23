@@ -22,6 +22,7 @@ export default function StudentResultsPage() {
       const status = res.data.status;
       setFeesStatus(status);
       if (status && status.canViewResults === false) {
+        setHiddenMessage(status.resultsAccessMessage || 'Please contact the school office about your results access.');
         setShowBlocked(true);
         setLoading(false);
       } else {
