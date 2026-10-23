@@ -34,6 +34,8 @@ exports.getStudents = async (req, res) => {
           feesRequired: rest.feesRequired || 0,
           feesPaid: rest.feesPaid || 0,
           feesBalance: rest.feesBalance ?? Math.max(0, (rest.feesRequired || 0) - (rest.feesPaid || 0)),
+          financeResultsAccessApproved: rest.financeResultsAccessApproved === true,
+          headmasterResultsAccessOverride: rest.headmasterResultsAccessOverride === true,
           isActive: rest.isActive,
         };
       }
