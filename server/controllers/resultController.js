@@ -90,7 +90,10 @@ exports.updateResult = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Result is locked and cannot be edited' });
     }
     const previousStatus = result.status;
-    Object.assign(result, req.body);
+    // Accept only mark/remark fields. Never accept status or publication metadata from a client request.
+    for (const field of ['termMark', 'examMark', 'projectMark', 'teacherRemark']) {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) result[field] = req.body[field];
+    }
     result.finalMark = calcFinalMark(result.termMark, result.examMark, result.projectMark);
     const gradeInfo = await applyGrade(result.finalMark);
     Object.assign(result, gradeInfo);
