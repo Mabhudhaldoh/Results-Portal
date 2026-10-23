@@ -52,7 +52,7 @@ exports.getDashboard = async (req, res) => {
       } else if (!feeAccess.canViewResults) {
         resultsHiddenMessage = feeAccess.resultsAccessMessage;
       } else {
-        studentResults = allResults.filter(r => r.student === req.user._id && r.status === 'published').slice(0, 10);
+        studentResults = allResults.filter(r => r.student === req.user._id && r.status === 'published' && r.verifiedBy && r.publishedBy).slice(0, 10);
         studentResults = await Promise.all(studentResults.map(async r => ({
           ...r,
           subject: await db.collection('subjects').findById(r.subject) || null,
