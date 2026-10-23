@@ -34,6 +34,9 @@ exports.getStudentReport = async (req, res) => {
     let results = [];
     if (!resultsHidden) {
       results = await db.collection('results').find({ student: studentIdParam, status: 'published' });
+      if (req.user.role === 'student') {
+        results = results.filter(r => r.verifiedBy && r.publishedBy);
+      }
       if (academicYear) results = results.filter(r => r.academicYear === academicYear);
       if (term) results = results.filter(r => r.term === term);
 
