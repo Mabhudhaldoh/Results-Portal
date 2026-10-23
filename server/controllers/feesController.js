@@ -1,4 +1,5 @@
 const db = require("../config/database");
+const { getStudentFeeAccess } = require('../utils/studentFeeAccess');
 
 exports.getFeesStatus = async (req, res) => {
   try {
@@ -8,13 +9,9 @@ exports.getFeesStatus = async (req, res) => {
     const required = student.feesRequired || 0;
     const paid = student.feesPaid || 0;
     const balance = required - paid;
-    const settingsArr = await db.collection('settings').find();
-    const settings = settingsArr[0];
-    const feesViewPercentage = settings?.feesViewPercentage || 50;
-    const feesBlockingEnabled = settings?.feesBlockingEnabled !== false;
+    const access = await getStudentFeeAccess(student);
     const paidPercentage = required > 0 ? Math.round((paid / required) * 100) : 100;
-    const canViewResults = !feesBlockingEnabled || paid >= required || paidPercentage >= feesViewPercentage;
-    res.json({ success: true, status: { feesRequired: required, feesPaid: paid, feesBalance: balance, paidPercentage, feesViewPercentage, feesBlockingEnabled, canViewResults } });
+    res.json({ success: true, status: { ...access, paidPercentage } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -60,6 +57,37 @@ exports.updateFees = async (req, res) => {
     if (student.feesBalance < 0) student.feesBalance = 0;
     await db.collection('users').save(student);
     res.json({ success: true, student });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.setStudentResultsAccessApproval = async (req, res) => {
+  try {
+    const { approved, note } = req.body;
+    if (typeof approved !== 'boolean') return res.status(400).json({ success: false, message: 'approved must be true or false' });
+    const student = await db.collection('users').findById(req.params.id);
+    if (!student || student.role !== 'student') return res.status(404).json({ success: false, message: 'Student not found' });
+    const access = await getStudentFeeAccess(student);
+    if (access.feesBalance < 100 && approved) {
+      return res.status(400).json({ success: false, message: 'Students with balances below $100 already qualify automatically.' });
+    }
+    student.financeResultsAccessApproved = approved;
+    student.financeResultsAccessBy = approved ? req.user._id : null;
+    student.financeResultsAccessAt = approved ? new Date().toISOString() : null;
+    student.financeResultsAccessNote = approved ? String(note || '').slice(0, 500) : '';
+    // Revoking finance approval also removes the headmaster override.
+    if (!approved) {
+      student.headmasterResultsAccessOverride = false;
+      student.headmasterResultsAccessBy = null;
+      student.headmasterResultsAccessAt = null;
+    }
+    await db.collection('users').save(student);
+    await db.collection('auditLogs').create({
+      user: req.user._id, action: approved ? 'FINANCE_APPROVE_RESULTS_ACCESS' : 'FINANCE_REVOKE_RESULTS_ACCESS',
+      target: student._id, details: (approved ? 'Finance approved' : 'Finance revoked') + ' special results access for ' + student.firstName + ' ' + student.lastName
+    });
+    res.json({ success: true, studentId: student._id, financeResultsAccessApproved: approved, headmasterResultsAccessOverride: student.headmasterResultsAccessOverride === true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
