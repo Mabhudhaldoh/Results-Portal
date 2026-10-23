@@ -12,7 +12,7 @@ async function getEffectiveYearTerm(academicYear, term) {
 exports.getStudentReport = async (req, res) => {
   try {
     const { studentId, academicYear, term } = req.query;
-    const studentIdParam = studentId || req.user._id;
+    const studentIdParam = req.user.role === 'student' ? req.user._id : (studentId || req.user._id);
     const student = await db.collection('users').findById(studentIdParam);
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
@@ -22,9 +22,13 @@ exports.getStudentReport = async (req, res) => {
     let resultsHiddenMessage = null;
     if (req.user.role === 'student') {
       const visibility = await require('../utils/resultsVisibility').getResultsVisibility();
+      const feeAccess = await require('../utils/studentFeeAccess').getStudentFeeAccess(student);
       if (!visibility.visible) {
         resultsHidden = true;
         resultsHiddenMessage = visibility.message;
+      } else if (!feeAccess.canViewResults) {
+        resultsHidden = true;
+        resultsHiddenMessage = feeAccess.resultsAccessMessage;
       }
     }
     let results = [];
