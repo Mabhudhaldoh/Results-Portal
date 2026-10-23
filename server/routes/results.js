@@ -11,7 +11,7 @@ router.route('/').get(getResults).post(authorize('admin', 'teacher'), createResu
 router.route('/student').get(authorize('student'), getStudentResults);
 router.post('/bulk', authorize('admin', 'teacher'), bulkCreateResults);
 router.post('/upload-excel', authorize('admin', 'teacher'), upload.single('file'), uploadExcel);
-router.put('/publish', authorize('admin'), publishResults);
+router.put('/publish', authorize('headmaster'), publishResults);
 router.put('/bulk-delete', authorize('admin'), deleteBulkResults);
 router.put('/lock', authorize('admin'), lockResults);
 router.put('/unlock', authorize('admin'), unlockResults);
