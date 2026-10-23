@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { DollarSign, AlertTriangle, Search, Eye, EyeOff, CheckCircle, ShieldCheck } from 'lucide-react';
+import { DollarSign, AlertTriangle, Search, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PendingFeesPage() {
   const [pending, setPending] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [automaticAccessThreshold] = useState(100);
+  const automaticAccessThreshold = 100;
 
   const fetchData = async () => {
     try {
@@ -107,9 +107,9 @@ export default function PendingFeesPage() {
                     <td className="px-4 py-3 text-sm text-right">
                       <div className="flex items-center justify-end gap-2">
                         <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div className={`h-2 rounded-full ${s.paidPercentage >= feesViewPercentage ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min(s.paidPercentage, 100)}%` }}></div>
+                          <div className={`h-2 rounded-full ${s.canViewResults ? 'bg-green-500' : 'bg-red-500'}`} style={{ width: `${Math.min(s.paidPercentage, 100)}%` }}></div>
                         </div>
-                        <span className={`text-xs font-medium ${s.paidPercentage >= feesViewPercentage ? 'text-green-600' : 'text-red-600'}`}>{s.paidPercentage}%</span>
+                        <span className={`text-xs font-medium ${s.canViewResults ? 'text-green-600' : 'text-red-600'}`}>{s.paidPercentage}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
