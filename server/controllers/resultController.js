@@ -39,7 +39,8 @@ exports.getResults = async (req, res) => {
       if (!feeAccess.canViewResults || !visibility.visible) {
         return res.json({ success: true, results: [], visible: false, message: !visibility.visible ? visibility.message : feeAccess.resultsAccessMessage });
       }
-      results = results.filter(r => r.student === req.user._id && r.status === 'published');
+      // Legacy published rows without Headmaster verification/publication metadata must remain hidden from students.
+      results = results.filter(r => r.student === req.user._id && r.status === 'published' && r.verifiedBy && r.publishedBy);
     }
 
     results = await Promise.all(results.map(async r => {
@@ -379,6 +380,7 @@ exports.getStudentResults = async (req, res) => {
       return res.json({ success: true, results: [], visible: false, message: feeAccess.resultsAccessMessage, feeAccess });
     }
     let results = await db.collection('results').find({ student: req.user._id, status: 'published' });
+    results = results.filter(r => r.verifiedBy && r.publishedBy);
     if (academicYear) results = results.filter(r => r.academicYear === academicYear);
     if (term) results = results.filter(r => r.term === term);
     results = await Promise.all(results.map(async r => ({
