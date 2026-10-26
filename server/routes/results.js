@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const multer = require('multer');
-const { getResults, createResult, updateResult, bulkCreateResults, uploadExcel, publishResults, lockResults, unlockResults, hideResults, verifyResults, unverifyResults, deleteResult, deleteBulkResults, calculatePositions, getStudentResults } = require('../controllers/resultController');
+const { getResults, createResult, updateResult, bulkCreateResults, uploadExcel, publishResults, getPublishDelegateAccounts, getPublishDelegates, setPublishDelegates, lockResults, unlockResults, hideResults, verifyResults, unverifyResults, deleteResult, deleteBulkResults, calculatePositions, getStudentResults } = require('../controllers/resultController');
 const { protect, authorize } = require('../middleware/auth');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -11,7 +11,10 @@ router.route('/').get(getResults).post(authorize('admin', 'teacher'), createResu
 router.route('/student').get(authorize('student'), getStudentResults);
 router.post('/bulk', authorize('admin', 'teacher'), bulkCreateResults);
 router.post('/upload-excel', authorize('admin', 'teacher'), upload.single('file'), uploadExcel);
-router.put('/publish', authorize('headmaster'), publishResults);
+router.get('/publish-delegates/accounts', authorize('headmaster'), getPublishDelegateAccounts);
+router.get('/publish-delegates', authorize('headmaster'), getPublishDelegates);
+router.put('/publish-delegates', authorize('headmaster'), setPublishDelegates);
+router.put('/publish', authorize('admin', 'teacher', 'headmaster'), publishResults);
 router.put('/bulk-delete', authorize('admin'), deleteBulkResults);
 router.put('/lock', authorize('admin'), lockResults);
 router.put('/unlock', authorize('admin'), unlockResults);
