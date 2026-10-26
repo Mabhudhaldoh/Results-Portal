@@ -30,8 +30,8 @@ exports.setHeadmasterResultsAccessOverride = async (req, res) => {
     const student = await db.collection('users').findById(req.params.id);
     if (!student || student.role !== 'student') return res.status(404).json({ success: false, message: 'Student not found' });
     const access = await getStudentFeeAccess(student);
-    if (access.feesBalance < 100) {
-      return res.status(400).json({ success: false, message: 'This student already qualifies for automatic results access.' });
+    if (access.feesBalance <= 100) {
+      return res.status(400).json({ success: false, message: 'This student already qualifies for automatic results access (balance of $100 or less).' });
     }
     if (enabled && student.financeResultsAccessApproved !== true) {
       return res.status(403).json({ success: false, message: 'Finance department approval is required before the headmaster can grant access.' });
