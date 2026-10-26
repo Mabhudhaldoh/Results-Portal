@@ -65,10 +65,9 @@ export default function ResultsPage() {
     api.get('/academic').then(r => setAcademicYears(r.data.years || []));
   }, [filters]);
 
-  useEffect(() => { fetchResults(); }, [filters]);
   
   useEffect(() => {
-    if (!user || !['admin', 'teacher', 'headmaster'].includes(user.role)) return;
+    if (!user || !(user.role === 'admin' || user.role === 'teacher' || user.role === 'headmaster')) return;
     api.get('/results/publish-permission').then(r => setCanPublishResults(r.data.canPublish === true)).catch(() => setCanPublishResults(false));
   }, [user?.role]);
 
