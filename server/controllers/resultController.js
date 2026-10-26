@@ -177,12 +177,45 @@ exports.uploadExcel = async (req, res) => {
   }
 };
 
+exports.getPublishDelegateAccounts = async (req, res) => {
+  try {
+    const users = await db.collection('users').find();
+    const accounts = users.filter(u => u.isActive !== false && ['admin', 'teacher'].includes(u.role))
+      .map(({ password, ...u }) => ({ _id: u._id, firstName: u.firstName, lastName: u.lastName, email: u.email, role: u.role }));
+    res.json({ success: true, accounts });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+exports.getPublishDelegates = async (req, res) => {
+  try {
+    const settings = (await db.collection('settings').find())[0] || {};
+    res.json({ success: true, delegateIds: settings.resultsPublisherDelegates || [] });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+exports.setPublishDelegates = async (req, res) => {
+  try {
+    if (!Array.isArray(req.body.delegateIds)) return res.status(400).json({ success: false, message: 'delegateIds must be an array.' });
+    const users = await db.collection('users').find();
+    const eligible = new Set(users.filter(u => u.isActive !== false && ['admin', 'teacher'].includes(u.role)).map(u => String(u._id)));
+    const ids = [...new Set(req.body.delegateIds.map(String))];
+    if (ids.some(id => !eligible.has(id))) return res.status(400).json({ success: false, message: 'Only active admin or teacher accounts may be delegated publishing permission.' });
+    let settings = (await db.collection('settings').find())[0];
+    if (settings) { settings.resultsPublisherDelegates = ids; await db.collection('settings').save(settings); }
+    else await db.collection('settings').create({ resultsPublisherDelegates: ids });
+    await db.collection('auditLogs').create({ user: req.user._id, action: 'UPDATE_RESULT_PUBLISH_DELEGATES', details: 'Headmaster updated delegated result publishers (' + ids.length + ' account(s))' });
+    res.json({ success: true, delegateIds: ids, message: 'Delegated publishing permissions updated.' });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
 exports.publishResults = async (req, res) => {
   try {
     const { ids, scheduleFrom, hideAfter } = req.body;
-    if (req.user.role !== 'headmaster') {
-      return res.status(403).json({ success: false, message: 'Only the Headmaster can publish results.' });
-    }
+    const settingsForDelegation = (await db.collection('settings').find())[0] || {};
+    const delegateIds = (settingsForDelegation.resultsPublisherDelegates || []).map(String);
+    const isHeadmaster = req.user.role === 'headmaster';
+    const isDelegatedPublisher = delegateIds.includes(String(req.user._id));
+    if (!isHeadmaster && !isDelegatedPublisher) return res.status(403).json({ success: false, message: 'Only the Headmaster or an account explicitly delegated by the Headmaster can publish results.' });
     if (!Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ success: false, message: 'Select at least one verified result to publish.' });
     }
@@ -191,7 +224,7 @@ exports.publishResults = async (req, res) => {
     for (const id of ids) {
       const result = await db.collection('results').findById(id);
       if (!result) return res.status(404).json({ success: false, message: 'A selected result could not be found. Refresh and try again.' });
-      if (result.status !== 'verified') {
+      if (result.status !== 'verified' || !result.verifiedBy || !result.verifiedAt) {
         return res.status(400).json({
           success: false,
           message: 'Publication blocked: every selected result must first be verified by the Headmaster. At least one selected result is not verified.'
@@ -203,6 +236,7 @@ exports.publishResults = async (req, res) => {
     for (const result of selectedResults) {
       result.status = 'published';
       result.publishedBy = req.user._id;
+      result.publishedByDelegation = req.user.role !== 'headmaster';
       result.publishedAt = new Date().toISOString();
       await db.collection('results').save(result);
     }
