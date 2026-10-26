@@ -264,7 +264,7 @@ export default function ResultsPage() {
         <Info size={20} className="text-blue-600 dark:text-blue-300 mt-0.5 flex-shrink-0" />
         <div className="text-sm text-blue-900 dark:text-blue-100">
           <p className="font-semibold">Results release workflow</p>
-          <p className="mt-1">New marks remain Draft until the Headmaster verifies them. Only the Headmaster can publish verified results to students. Select result rows using the checkboxes, then choose the operation above.</p>
+          <p className="mt-1">New marks remain Draft until the Headmaster verifies them. Only the Headmaster can publish verified results, unless the Headmaster explicitly delegates publishing to a selected staff account. Select result rows using the checkboxes, then choose the operation above.</p>
         </div>
       </div>
 
