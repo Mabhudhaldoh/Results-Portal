@@ -31,7 +31,13 @@ exports.getResults = async (req, res) => {
     if (status) results = results.filter(r => r.status === status);
     if (teacher) results = results.filter(r => r.teacher === teacher);
 
-    if (req.user.role === 'teacher') results = results.filter(r => r.teacher === req.user._id);
+    if (req.user.role === 'teacher') {
+      const accessSettings = (await db.collection('settings').find())[0] || {};
+      const delegatedPublisher = (accessSettings.resultsPublisherDelegates || []).map(String).includes(String(req.user._id));
+      results = delegatedPublisher
+        ? results.filter(r => r.status === 'verified')
+        : results.filter(r => r.teacher === req.user._id);
+    }
     if (req.user.role === 'student') {
       const student = await db.collection('users').findById(req.user._id);
       const feeAccess = await require('../utils/studentFeeAccess').getStudentFeeAccess(student);
