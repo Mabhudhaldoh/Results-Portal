@@ -34,6 +34,7 @@ const api = {
   get(url: string) { return request('GET', url); },
   post(url: string, data?: any) { return request('POST', url, data); },
   put(url: string, data?: any) { return request('PUT', url, data); },
+  patch(url: string, data?: any) { return request('PATCH', url, data); },
   delete(url: string) { return request('DELETE', url); },
 };
 
