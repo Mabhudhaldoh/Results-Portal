@@ -6,7 +6,7 @@ export default function ReportCardView({ report }: Props) {
   const att = report.attendance;
   const attPercent = att && att.totalDays && att.daysPresent != null ? Math.round((att.daysPresent / att.totalDays) * 100) + '%' : '-';
   const classLabel = String(report.student?.className?.name || report.student?.className || '').trim();
-  const isAdvancedLevel = /lower\\s*six|upper\\s*six|form\\s*6|sixth\\s*form|advanced\\s*level/i.test(classLabel);
+  const isAdvancedLevel = /lower\s*six|upper\s*six|form\s*6|sixth\s*form|advanced\s*level/i.test(classLabel);
   const gradeOf = (r: any) => String(r.grade || '').trim().toUpperCase();
   const aLevelPoints: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
   const isPass = (r: any) => isAdvancedLevel ? Object.prototype.hasOwnProperty.call(aLevelPoints, gradeOf(r)) : ['A', 'B', 'C'].includes(gradeOf(r));
