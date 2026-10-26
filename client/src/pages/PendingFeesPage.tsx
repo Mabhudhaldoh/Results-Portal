@@ -45,7 +45,7 @@ export default function PendingFeesPage() {
           <AlertTriangle size={24} className="text-amber-500" /> Pending Fees
         </h1>
         <div className="text-sm text-gray-500">
-          Balances below <span className="font-bold text-mlk-red">$100</span> qualify automatically
+          Balances of <span className="font-bold text-mlk-red">$100 or less</span> qualify automatically
         </div>
       </div>
 
