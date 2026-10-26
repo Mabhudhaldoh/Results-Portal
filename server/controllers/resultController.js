@@ -93,6 +93,9 @@ exports.updateResult = async (req, res) => {
   try {
     const result = await db.collection('results').findById(req.params.id);
     if (!result) return res.status(404).json({ success: false, message: 'Result not found' });
+    if (req.user.role === 'teacher' && String(result.teacher) !== String(req.user._id)) {
+      return res.status(403).json({ success: false, message: 'Teachers may only edit results they entered.' });
+    }
     if (result.status === 'locked') {
       return res.status(400).json({ success: false, message: 'Result is locked and cannot be edited' });
     }
