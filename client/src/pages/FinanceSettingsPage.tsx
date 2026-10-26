@@ -58,7 +58,7 @@ export default function FinanceSettingsPage() {
         </div>
         <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
           <h3 className="font-semibold flex items-center gap-2"><ShieldCheck size={18} /> Student Results Access Policy</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">Balances below $100 qualify automatically. For balances of $100 or more, the Finance department must approve the individual student and the Headmaster must then grant access. Both approvals are required.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">When fees blocking is enabled, balances of $100 or less qualify automatically. Balances above $100 are blocked unless Finance approves that specific student first and the Headmaster then grants access.</p>
         </div>
       </div>
       <p className="text-xs text-gray-500">School identity, grading, academic-year and results-publishing settings remain under administrator control.</p>
