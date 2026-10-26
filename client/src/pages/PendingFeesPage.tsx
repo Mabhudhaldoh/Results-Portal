@@ -122,7 +122,7 @@ export default function PendingFeesPage() {
                       {s.financeResultsAccessApproved && !s.headmasterResultsAccessOverride && <p className="text-xs text-amber-600 mt-1">Finance approved</p>}
                     </td>
                     <td className="px-4 py-3">
-                      {s.feesBalance < automaticAccessThreshold ? (
+                      {s.feesBalance <= automaticAccessThreshold ? (
                         <span className="text-xs text-gray-500">Automatic access</span>
                       ) : s.financeResultsAccessApproved ? (
                         <button onClick={() => setHeadmasterOverride(s, !s.headmasterResultsAccessOverride)}
