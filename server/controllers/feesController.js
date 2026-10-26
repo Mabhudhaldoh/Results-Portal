@@ -69,8 +69,8 @@ exports.setStudentResultsAccessApproval = async (req, res) => {
     const student = await db.collection('users').findById(req.params.id);
     if (!student || student.role !== 'student') return res.status(404).json({ success: false, message: 'Student not found' });
     const access = await getStudentFeeAccess(student);
-    if (access.feesBalance < 100 && approved) {
-      return res.status(400).json({ success: false, message: 'Students with balances below $100 already qualify automatically.' });
+    if (access.feesBalance <= 100 && approved) {
+      return res.status(400).json({ success: false, message: 'Students with balances of $100 or less already qualify automatically.' });
     }
     student.financeResultsAccessApproved = approved;
     student.financeResultsAccessBy = approved ? req.user._id : null;
