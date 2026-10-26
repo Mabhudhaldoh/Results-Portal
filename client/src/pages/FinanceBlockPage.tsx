@@ -20,7 +20,7 @@ export default function FinanceBlockPage() {
 
   const canViewResults = (s: any) => {
     const balance = Math.max(0, (s.feesRequired || 0) - (s.feesPaid || 0));
-    return balance < 100 || (s.financeResultsAccessApproved === true && s.headmasterResultsAccessOverride === true);
+    return balance <= 100 || (s.financeResultsAccessApproved === true && s.headmasterResultsAccessOverride === true);
   };
 
   const setFinanceApproval = async (student: any, approved: boolean) => {
@@ -46,8 +46,8 @@ export default function FinanceBlockPage() {
 
       <div className="card space-y-2">
         <h2 className="text-lg font-semibold flex items-center gap-2"><Settings size={18} /> Student Results Access Policy</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-300">Students with a fees balance below $100 can view their published results automatically.</p>
-        <p className="text-sm text-gray-600 dark:text-gray-300">For a balance of $100 or more, Finance must approve the individual student first. The Headmaster can then grant or revoke access for that student. Both approvals are required.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Students with a fees balance of $100 or less can view their published results automatically.</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">For a balance above $100, Finance must approve the individual student first. The Headmaster can then grant or revoke access for that student. Both approvals are required.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
