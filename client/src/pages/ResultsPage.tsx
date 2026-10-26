@@ -35,6 +35,9 @@ export default function ResultsPage() {
   const [uploadTerm, setUploadTerm] = useState('Term 1');
   const [uploadClass, setUploadClass] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [publisherAccounts, setPublisherAccounts] = useState<any[]>([]);
+  const [publisherDelegateIds, setPublisherDelegateIds] = useState<string[]>([]);
+  const [savingDelegates, setSavingDelegates] = useState(false);
 
   const fetchResults = () => {
     const params = new URLSearchParams();
@@ -62,6 +65,28 @@ export default function ResultsPage() {
   }, [filters]);
 
   useEffect(() => { fetchResults(); }, [filters]);
+  
+  useEffect(() => {
+    if (user?.role !== 'headmaster') return;
+    Promise.all([api.get('/results/publish-delegates/accounts'), api.get('/results/publish-delegates')])
+      .then(([accountsRes, delegatesRes]) => {
+        setPublisherAccounts(accountsRes.data.accounts || []);
+        setPublisherDelegateIds((delegatesRes.data.delegateIds || []).map(String));
+      })
+      .catch(() => toast.error('Could not load publishing delegation settings'));
+  }, [user?.role]);
+
+  const savePublisherDelegates = async () => {
+    setSavingDelegates(true);
+    try {
+      const res = await api.put('/results/publish-delegates', { delegateIds: publisherDelegateIds });
+      toast.success(res.data.message || 'Delegated publishers updated');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Could not update delegated publishers');
+    } finally {
+      setSavingDelegates(false);
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,6 +261,20 @@ export default function ResultsPage() {
           <p className="mt-1">New marks remain Draft until the Headmaster verifies them. Only the Headmaster can publish verified results to students. Select result rows using the checkboxes, then choose the operation above.</p>
         </div>
       </div>
+
+      {user?.role === 'headmaster' && (
+        <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4 space-y-3">
+          <div>
+            <h2 className="font-semibold text-amber-950 dark:text-amber-100">Delegated Result Publishers</h2>
+            <p className="text-sm text-amber-900 dark:text-amber-200 mt-1">Only accounts selected here may publish results on your behalf. Delegation does not allow verification; results must still be verified by you first.</p>
+          </div>
+          <select multiple value={publisherDelegateIds} onChange={e => setPublisherDelegateIds(Array.from(e.target.selectedOptions, option => option.value))} className="input-field min-h-32 w-full">
+            {publisherAccounts.map(account => <option key={account._id} value={String(account._id)}>{account.firstName} {account.lastName} — {account.role}{account.email ? ' (' + account.email + ')' : ''}</option>)}
+          </select>
+          <p className="text-xs text-amber-800 dark:text-amber-200">Use Ctrl (Windows) or Cmd (Mac) to select multiple accounts. Clear all selections to revoke every delegation.</p>
+          <button onClick={savePublisherDelegates} disabled={savingDelegates} className="btn-primary text-sm">{savingDelegates ? 'Saving...' : 'Save Publishing Delegates'}</button>
+        </div>
+      )}
 
       <div className="flex gap-3 flex-wrap">
         <select value={filters.className} onChange={e => setFilters({ ...filters, className: e.target.value })} className="input-field w-auto">
