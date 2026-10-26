@@ -5,6 +5,13 @@ interface Props {
 export default function ReportCardView({ report }: Props) {
   const att = report.attendance;
   const attPercent = att && att.totalDays && att.daysPresent != null ? Math.round((att.daysPresent / att.totalDays) * 100) + '%' : '-';
+  const classLabel = String(report.student?.className?.name || report.student?.className || '').trim();
+  const isAdvancedLevel = /lower\\s*six|upper\\s*six|form\\s*6|sixth\\s*form|advanced\\s*level/i.test(classLabel);
+  const gradeOf = (r: any) => String(r.grade || '').trim().toUpperCase();
+  const aLevelPoints: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
+  const isPass = (r: any) => isAdvancedLevel ? Object.prototype.hasOwnProperty.call(aLevelPoints, gradeOf(r)) : ['A', 'B', 'C'].includes(gradeOf(r));
+  const passedCount = (report.results || []).filter((r: any) => isPass(r)).length;
+  const totalPoints = (report.results || []).reduce((sum: number, r: any) => sum + (isAdvancedLevel ? (aLevelPoints[gradeOf(r)] || 0) : 0), 0);
 
   return (
     <>
@@ -49,43 +56,36 @@ export default function ReportCardView({ report }: Props) {
             </div>
           </div>
 
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-mlk-blue">{isAdvancedLevel ? 'Advanced Level (Lower Six / Upper Six)' : 'Ordinary Level (Form 1–4)'}</div>
           <table className="w-full mb-3 text-sm report-table">
-            <thead>
-              <tr>
-                <th className="text-left">Subject</th>
-                <th className="text-center">Term Mark</th>
-                <th className="text-center">Exam Mark</th>
-                <th className="text-center">Project</th>
-                <th className="text-center">Grade Mark</th>
-                <th className="text-center">Grade</th>
-                <th className="text-left">Remark</th>
-              </tr>
-            </thead>
-            <tbody>
-              {report.results?.map((r: any) => (
-                <tr key={r._id}>
-                  <td className="font-medium">{r.subject?.name || '-'}</td>
-                  <td className="text-center">{r.termMark ?? '-'}</td>
-                  <td className="text-center">{r.examMark ?? '-'}</td>
-                  <td className="text-center">{r.projectMark ?? '-'}</td>
-                  <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>
-                  <td className="text-center"><span className="badge badge-info">{r.grade || '-'}</span></td>
-                  <td className="text-sm">{r.teacherRemark || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
+            <thead><tr>
+              <th className="text-left">Subject</th>
+              {!isAdvancedLevel && <th className="text-center">Term Mark</th>}
+              {!isAdvancedLevel && <th className="text-center">Exam Mark</th>}
+              {!isAdvancedLevel && <th className="text-center">Project</th>}
+              {!isAdvancedLevel && <th className="text-center">Final Mark</th>}
+              <th className="text-center">Grade</th>
+              {isAdvancedLevel && <th className="text-center">Points</th>}
+              <th className="text-center">Result</th><th className="text-left">Remark</th>
+            </tr></thead>
+            <tbody>{report.results?.map((r: any) => <tr key={r._id}>
+              <td className="font-medium">{r.subject?.name || '-'}</td>
+              {!isAdvancedLevel && <td className="text-center">{r.termMark ?? '-'}</td>}
+              {!isAdvancedLevel && <td className="text-center">{r.examMark ?? '-'}</td>}
+              {!isAdvancedLevel && <td className="text-center">{r.projectMark ?? '-'}</td>}
+              {!isAdvancedLevel && <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>}
+              <td className="text-center"><span className="badge badge-info">{gradeOf(r) || '-'}</span></td>
+              {isAdvancedLevel && <td className="text-center font-bold">{aLevelPoints[gradeOf(r)] || 0}</td>}
+              <td className="text-center font-semibold">{isPass(r) ? 'PASS' : 'FAIL'}</td>
+              <td className="text-sm">{r.teacherRemark || '-'}</td>
+            </tr>)}</tbody>
           </table>
-          <p className="text-xs text-gray-500 mb-3">Grade Mark = 80% Exam Mark + 20% Project Mark. The Term Mark is recorded for reference only and does not affect the Grade.</p>
-
-          <div className="grid grid-cols-2 gap-4 mb-4 p-4 rounded-lg" style={{ background: 'linear-gradient(135deg, #eff6ff, #fef2f2)' }}>
-            <div className="text-center border-r border-gray-300">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Average</p>
-              <p className="text-2xl font-bold" style={{ color: '#b91c1c' }}>{report.average ?? '-'}%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p>
-              <p className="text-2xl font-bold text-gray-800">{report.results?.length || 0}</p>
-            </div>
+          {!isAdvancedLevel && <p className="text-xs text-gray-500 mb-3">Form 1–4: grades A, B and C are passes. Grade D and below are fails.</p>}
+          {isAdvancedLevel && <p className="text-xs text-gray-500 mb-3">Advanced Level points: A = 5, B = 4, C = 3, D = 2, E = 1. Grades below E are fails.</p>}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 rounded-lg" style={{ background: 'linear-gradient(135deg, #eff6ff, #fef2f2)' }}>
+            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isAdvancedLevel ? 'Total Points' : 'Subjects Passed'}</p><p className="text-2xl font-bold" style={{ color: '#b91c1c' }}>{isAdvancedLevel ? totalPoints : passedCount}</p></div>
+            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p><p className="text-2xl font-bold text-gray-800">{report.results?.length || 0}</p></div>
+            <div className="text-center"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Average Mark</p><p className="text-2xl font-bold text-gray-800">{report.average ?? '-'}%</p></div>
           </div>
 
           {(att || report.student?.sports) && (
