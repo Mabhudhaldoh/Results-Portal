@@ -126,11 +126,11 @@ export default function FinanceBlockPage() {
                         ) : (
                           <span className="badge badge-danger flex items-center gap-1 w-fit"><EyeOff size={14} /> Blocked</span>
                         )}
-                        {balance >= 100 && s.financeResultsAccessApproved && !s.headmasterResultsAccessOverride && <p className="text-xs text-amber-600 mt-1">Awaiting headmaster</p>}
+                        {balance > 100 && s.financeResultsAccessApproved && !s.headmasterResultsAccessOverride && <p className="text-xs text-amber-600 mt-1">Awaiting headmaster</p>}
                       </td>
                       <td className="px-4 py-3">
-                        {balance < 100 ? (
-                          <span className="text-xs text-gray-500">Not required (&lt;$100)</span>
+                        {balance <= 100 ? (
+                          <span className="text-xs text-gray-500">Not required (balance of $100 or less)</span>
                         ) : (
                           <button onClick={() => setFinanceApproval(s, !s.financeResultsAccessApproved)}
                             className={`text-xs px-3 py-2 rounded-lg font-semibold inline-flex items-center gap-1 ${s.financeResultsAccessApproved ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}>
