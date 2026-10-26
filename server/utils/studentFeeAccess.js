@@ -7,9 +7,11 @@ exports.getStudentFeeAccess = async (student) => {
   const required = Number(student?.feesRequired || 0);
   const paid = Number(student?.feesPaid || 0);
   const balance = Math.max(0, Number((required - paid).toFixed(2)));
+  const settings = (await db.collection('settings').find())[0] || {};
+  const restrictionsEnabled = settings.feesBlockingEnabled !== false;
   const financeApproved = student?.financeResultsAccessApproved === true;
   const headmasterOverride = student?.headmasterResultsAccessOverride === true;
-  const automaticAccess = balance <= 100;
+  const automaticAccess = !restrictionsEnabled || balance <= 100;
   const canViewResults = automaticAccess || (financeApproved && headmasterOverride);
   let message = null;
   if (!canViewResults) {
@@ -23,6 +25,7 @@ exports.getStudentFeeAccess = async (student) => {
     feesRequired: required,
     feesPaid: paid,
     feesBalance: balance,
+    restrictionsEnabled,
     automaticAccess,
     financeResultsAccessApproved: financeApproved,
     headmasterResultsAccessOverride: headmasterOverride,
