@@ -61,7 +61,7 @@ export default function ApprovalsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Result Approvals</h1>
-          <p className="text-sm text-gray-500">Review and verify submitted results before admin publication</p>
+          <p className="text-sm text-gray-500">Review and verify submitted results before the Headmaster publishes them</p>
         </div>
         <div className="flex gap-2">
           <button onClick={verifySelected} disabled={selected.length === 0} className="btn-success text-sm"><ShieldCheck size={16} /> Verify ({selected.length})</button>
