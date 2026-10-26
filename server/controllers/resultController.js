@@ -238,6 +238,20 @@ exports.publishResults = async (req, res) => {
           message: 'Publication blocked: every selected result must first be verified by the Headmaster. At least one selected result is not verified.'
         });
       }
+      // When fee restrictions are enabled, Finance must approve each student
+      // with a balance above $100 before the Headmaster/delegate can publish.
+      if (settingsForDelegation.feesBlockingEnabled !== false) {
+        const student = await db.collection('users').findById(result.student);
+        if (student && student.role === 'student') {
+          const balance = Math.max(0, Number(((Number(student.feesRequired || 0) - Number(student.feesPaid || 0))).toFixed(2)));
+          if (balance > 100 && student.financeResultsAccessApproved !== true) {
+            return res.status(403).json({
+              success: false,
+              message: 'Publication blocked: Finance must approve results access for every selected student whose fees balance is above $100.'
+            });
+          }
+        }
+      }
       selectedResults.push(result);
     }
 
