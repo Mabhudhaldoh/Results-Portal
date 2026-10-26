@@ -117,12 +117,9 @@ export default function SettingsPage() {
           <h3 className="font-semibold mb-3">Student Result Access (Fees Blocking)</h3>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Minimum Payment % to View Results</label>
-              <div className="flex items-center gap-3">
-                <input type="range" min="0" max="100" value={form.feesViewPercentage} onChange={e => setForm({ ...form, feesViewPercentage: +e.target.value })} className="flex-1" />
-                <span className="text-lg font-bold text-mlk-red w-16 text-right">{form.feesViewPercentage}%</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Students must pay at least {form.feesViewPercentage}% of their total fees to access results and report cards</p>
+              <label className="label">Automatic Results Access Threshold</label>
+              <p className="text-sm font-semibold text-mlk-blue">$100 fees balance or less</p>
+              <p className="text-xs text-gray-500 mt-1">When fees blocking is enabled, students with balances above $100 need Finance approval first and then the Headmaster's individual approval.</p>
             </div>
             <div>
               <label className="label">Enable Fees Blocking</label>
@@ -130,7 +127,7 @@ export default function SettingsPage() {
                 <button type="button" onClick={() => setForm(f => ({ ...f, feesBlockingEnabled: !f.feesBlockingEnabled }))} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.feesBlockingEnabled ? 'bg-mlk-red' : 'bg-gray-300 dark:bg-gray-600'}`}>
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.feesBlockingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
-                <span className="text-sm font-medium">{form.feesBlockingEnabled ? 'Enabled - Students with low payment % cannot view results' : 'Disabled - All students can view results'}</span>
+                <span className="text-sm font-medium">{form.feesBlockingEnabled ? 'Enabled - Balances above $100 are blocked unless approved' : 'Disabled - All students can view results'}</span>
               </div>
             </div>
           </div>
