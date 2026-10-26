@@ -177,6 +177,14 @@ exports.uploadExcel = async (req, res) => {
   }
 };
 
+exports.getPublishPermission = async (req, res) => {
+  try {
+    const settings = (await db.collection('settings').find())[0] || {};
+    const delegates = (settings.resultsPublisherDelegates || []).map(String);
+    res.json({ success: true, canPublish: req.user.role === 'headmaster' || delegates.includes(String(req.user._id)) });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
 exports.getPublishDelegateAccounts = async (req, res) => {
   try {
     const users = await db.collection('users').find();
