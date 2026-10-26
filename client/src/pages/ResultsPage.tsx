@@ -38,6 +38,7 @@ export default function ResultsPage() {
   const [publisherAccounts, setPublisherAccounts] = useState<any[]>([]);
   const [publisherDelegateIds, setPublisherDelegateIds] = useState<string[]>([]);
   const [savingDelegates, setSavingDelegates] = useState(false);
+  const [canPublishResults, setCanPublishResults] = useState(false);
 
   const fetchResults = () => {
     const params = new URLSearchParams();
@@ -66,6 +67,11 @@ export default function ResultsPage() {
 
   useEffect(() => { fetchResults(); }, [filters]);
   
+  useEffect(() => {
+    if (!user || !['admin', 'teacher', 'headmaster'].includes(user.role)) return;
+    api.get('/results/publish-permission').then(r => setCanPublishResults(r.data.canPublish === true)).catch(() => setCanPublishResults(false));
+  }, [user?.role]);
+
   useEffect(() => {
     if (user?.role !== 'headmaster') return;
     Promise.all([api.get('/results/publish-delegates/accounts'), api.get('/results/publish-delegates')])
@@ -242,9 +248,9 @@ export default function ResultsPage() {
             <>
               <button onClick={verifySelected} disabled={selected.length === 0} className="btn-primary text-sm"><ShieldCheck size={16} /> Verify Selected ({selected.length})</button>
               <button onClick={unverifySelected} disabled={selected.length === 0} className="btn-outline text-sm"><EyeOff size={16} /> Return for Review</button>
-              <button onClick={publishSelected} disabled={selected.length === 0} className="btn-success text-sm"><Send size={16} /> Publish Verified ({selected.length})</button>
             </>
           )}
+          {canPublishResults && <button onClick={publishSelected} disabled={selected.length === 0} className="btn-success text-sm"><Send size={16} /> Publish Verified ({selected.length})</button>}
           {(user?.role === 'admin' || user?.role === 'teacher') && (
             <>
               <button onClick={() => setShowAddModal(true)} className="btn-primary text-sm"><Plus size={16} /> Add Result</button>
