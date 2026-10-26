@@ -306,7 +306,7 @@ export default function ResultsPage() {
           <table className="w-full">
             <thead>
               <tr className="table-header">
-                  {(user?.role === 'admin' || user?.role === 'headmaster') && <th className="px-4 py-3 w-10"><input type="checkbox" onChange={selectAll} checked={selected.length === results.length && results.length > 0} /></th>}
+                  {(user?.role === 'admin' || canPublishResults) && <th className="px-4 py-3 w-10"><input type="checkbox" onChange={selectAll} checked={selected.length === results.length && results.length > 0} /></th>}
                 <th className="px-4 py-3">Student</th>
                 <th className="px-4 py-3">Class</th>
                 <th className="px-4 py-3">Subject</th>
@@ -328,7 +328,7 @@ export default function ResultsPage() {
               ) : (
                 results.map(r => (
                   <tr key={r._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    {(user?.role === 'admin' || user?.role === 'headmaster') && <td className="px-4 py-3"><input type="checkbox" checked={selected.includes(r._id)} onChange={() => toggleSelect(r._id)} /></td>}
+                    {(user?.role === 'admin' || canPublishResults) && <td className="px-4 py-3"><input type="checkbox" checked={selected.includes(r._id)} onChange={() => toggleSelect(r._id)} /></td>}
                     <td className="px-4 py-3 text-sm">{r.student?.firstName} {r.student?.lastName}</td>
                     <td className="px-4 py-3 text-sm">{r.className?.name || '-'}</td>
                     <td className="px-4 py-3 text-sm">{r.subject?.name}</td>
