@@ -30,7 +30,17 @@ exports.updateSettings = async (req, res) => {
       });
     }
 
-    if (req.user.role === 'finance') {
+    if (req.user.role === 'headmaster') {
+      if (Object.prototype.hasOwnProperty.call(req.body, 'headmasterSignature')) {
+        const signature = req.body.headmasterSignature;
+        if (signature !== null && signature !== '' && (typeof signature !== 'string' || !/^data:image\\/(png|jpeg|webp);base64,/.test(signature) || signature.length > 1400000)) {
+          return res.status(400).json({ success: false, message: 'Upload a transparent PNG or JPEG signature under 1 MB.' });
+        }
+        settings.headmasterSignature = signature || null;
+      } else {
+        return res.status(403).json({ success: false, message: 'Headmaster accounts may only update the report-card signature here.' });
+      }
+    } else if (req.user.role === 'finance') {
       const allowed = ['defaultFeesRequired', 'feesViewPercentage', 'feesBlockingEnabled'];
       for (const key of allowed) {
         if (Object.prototype.hasOwnProperty.call(req.body, key)) settings[key] = req.body[key];
