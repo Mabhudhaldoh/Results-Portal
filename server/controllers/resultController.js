@@ -4,7 +4,7 @@ const XLSX = require('xlsx');
 async function calcFinalMark(termMark, examMark, term, studentId, classId) {
   const classRecord = classId ? await db.collection('classes').findById(classId) : null;
   const className = String(classRecord?.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const noExamTermOneClass = /^(form\s*1|form\s*2|form\s*3|lower\s*(six|6))$/.test(className);
+  const noExamTermOneClass = /^(form\s*[123]|lower\s*(six|6))/.test(className);
   if (String(term || '').toLowerCase().replace(/\s+/g, ' ').trim() === 'term 1' && noExamTermOneClass) {
     return Math.round((Number(termMark) || 0) * 100) / 100;
   }
