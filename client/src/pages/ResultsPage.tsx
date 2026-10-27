@@ -228,6 +228,8 @@ export default function ResultsPage() {
     return <span className={`badge ${map[status] || 'badge-gray'}`}>{status}</span>;
   };
 
+  const editClassLabel = String(editResult?.className?.name || editResult?.className || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const editNoExamTermOne = editResult?.term === 'Term 1' && /^(form\s*1|form\s*2|form\s*3|lower\s*(six|6))$/.test(editClassLabel);
   const selectedAddStudent = students.find((s: any) => s._id === addForm.student);
   const selectedAddSubject = subjects.find((s: any) => s._id === addForm.subject);
   const addBoard = selectedAddStudent?.examBoard || 'ZIMSEC';
@@ -474,7 +476,7 @@ export default function ResultsPage() {
                 <div><label className="label">Teacher Remark</label><input className="input-field" value={editForm.teacherRemark} onChange={e => setEditForm({ ...editForm, teacherRemark: e.target.value })} /></div>
                 <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <p className="text-sm text-gray-500">Calculated Final</p>
-                  <p className="text-xl font-bold">{Math.round((editForm.examMark * 0.8 + editForm.projectMark * 0.2) * 100) / 100}%</p>
+                  <p className="text-xl font-bold">{editNoExamTermOne ? editForm.termMark : editForm.examMark}%</p>
                 </div>
                 <button onClick={handleEdit} className="btn-primary w-full justify-center">Save Changes</button>
               </div>
