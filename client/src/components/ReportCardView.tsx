@@ -63,9 +63,9 @@ export default function ReportCardView({ report }: Props) {
             <thead><tr>
               <th className="text-left">Subject</th>
               <th className="text-center">Term Mark</th>
-              {!isAdvancedLevel && <th className="text-center">Exam Mark</th>}
+              <th className="text-center">Exam Mark</th>
               {!isAdvancedLevel && <th className="text-center">Project</th>}
-              {!isAdvancedLevel && <th className="text-center">Final Mark</th>}
+              <th className="text-center">Final Mark (%)</th>
               <th className="text-center">Grade</th>
               {isAdvancedLevel && <th className="text-center">Points</th>}
               <th className="text-center">Result</th><th className="text-left">Remark</th>
@@ -73,9 +73,9 @@ export default function ReportCardView({ report }: Props) {
             <tbody>{report.results?.map((r: any) => <tr key={r._id}>
               <td className="font-medium">{r.subject?.name || '-'}</td>
               <td className="text-center">{r.termMark ?? '-'}</td>
-              {!isAdvancedLevel && <td className="text-center">{r.examMark ?? '-'}</td>}
+              <td className="text-center">{r.examMark ?? '-'}</td>
               {!isAdvancedLevel && <td className="text-center">{r.projectMark ?? '-'}</td>}
-              {!isAdvancedLevel && <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>}
+              <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>
               <td className="text-center"><span className="badge badge-info">{gradeOf(r) || '-'}</span></td>
               {isAdvancedLevel && <td className="text-center font-bold">{pointsFor(r)}</td>}
               <td className="text-center font-semibold">{isPass(r) ? 'PASS' : 'FAIL'}</td>
