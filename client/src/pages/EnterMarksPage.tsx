@@ -145,8 +145,8 @@ export default function EnterMarksPage() {
   };
 
   const activeYear = academicYears.find(y => y.isActive);
-  const selectedClassName = String(classes.find(c => c._id === selectedClass)?.name || '').toLowerCase().replace(/\\s+/g, ' ').trim();
-  const noExamTermOne = term === 'Term 1' && /^(form\\s*1|form\\s*2|form\\s*3|lower\\s*(six|6))$/.test(selectedClassName);
+  const selectedClassName = String(classes.find(c => c._id === selectedClass)?.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const noExamTermOne = term === 'Term 1' && /^(form\s*1|form\s*2|form\s*3|lower\s*(six|6))$/.test(selectedClassName);
   const previewFinal = (m: any) => noExamTermOne ? (Number(m.termMark) || 0) : (Number(m.examMark) || 0);
 
   return (
