@@ -33,7 +33,7 @@ exports.updateSettings = async (req, res) => {
     if (req.user.role === 'headmaster') {
       if (Object.prototype.hasOwnProperty.call(req.body, 'headmasterSignature')) {
         const signature = req.body.headmasterSignature;
-        if (signature !== null && signature !== '' && (typeof signature !== 'string' || !/^data:image\\/(png|jpeg|webp);base64,/.test(signature) || signature.length > 1400000)) {
+        if (signature !== null && signature !== '' && (typeof signature !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(signature) || signature.length > 1400000)) {
           return res.status(400).json({ success: false, message: 'Upload a transparent PNG or JPEG signature under 1 MB.' });
         }
         settings.headmasterSignature = signature || null;
