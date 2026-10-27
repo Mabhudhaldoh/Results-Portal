@@ -154,10 +154,15 @@ exports.bulkCreateResults = async (req, res) => {
           academicYear: r.academicYear, term: r.term
         });
         if (existing) { errors.push({ student: r.student, message: 'Already exists' }); continue; }
-        const finalMark = calcFinalMark(r.termMark, r.examMark, r.projectMark);
-        const gradeInfo = await applyGrade(finalMark);
+        const student = await db.collection('users').findById(r.student);
+        const subject = await db.collection('subjects').findById(r.subject);
+        if (!student || !subject) { errors.push({ student: r.student, message: 'Student or subject not found' }); continue; }
+        const examBoard = student.examBoard || 'ZIMSEC';
+        if (examBoard !== (subject.examBoard || 'ZIMSEC')) { errors.push({ student: r.student, message: 'Student and subject examination boards do not match' }); continue; }
+        const finalMark = await calcFinalMark(r.termMark, r.examMark, r.term, student._id, r.className || student.className);
+        const gradeInfo = await applyGrade(finalMark, examBoard);
         const result = await db.collection('results').create({
-          ...r, teacher: req.user._id, finalMark, ...gradeInfo, status: 'draft'
+          ...r, examBoard, teacher: req.user._id, finalMark, ...gradeInfo, status: 'draft'
         });
         created.push(result);
       } catch (err) {
@@ -183,13 +188,17 @@ exports.uploadExcel = async (req, res) => {
         const admNo = row['Admission Number'] || row['admissionNumber'];
         const student = await db.collection('users').findOne({ admissionNumber: admNo, role: 'student' });
         if (!student) { errors.push({ row: admNo, message: 'Student not found' }); continue; }
-        const termMark = row['Term Mark'] || row['termMark'] || 0;
-        const examMark = row['Exam Mark'] || row['examMark'] || 0;
-        const projectMark = row['Project Mark'] || row['projectMark'] || 0;
-        const finalMark = calcFinalMark(termMark, examMark, projectMark);
-        const gradeInfo = await applyGrade(finalMark);
+        const subject = await db.collection('subjects').findById(req.body.subject);
+        if (!subject) { errors.push({ row: admNo, message: 'Subject not found' }); continue; }
+        const examBoard = student.examBoard || 'ZIMSEC';
+        if (examBoard !== (subject.examBoard || 'ZIMSEC')) { errors.push({ row: admNo, message: 'Student and subject examination boards do not match' }); continue; }
+        const termMark = row['Term Mark'] ?? row['termMark'] ?? 0;
+        const examMark = row['Exam Mark'] ?? row['examMark'] ?? 0;
+        const projectMark = row['Project Mark'] ?? row['projectMark'] ?? 0;
+        const finalMark = await calcFinalMark(termMark, examMark, req.body.term, student._id, student.className);
+        const gradeInfo = await applyGrade(finalMark, examBoard);
         const result = await db.collection('results').create({
-          student: student._id, subject: req.body.subject, teacher: req.user._id,
+          student: student._id, subject: req.body.subject, examBoard, teacher: req.user._id,
           className: student.className, stream: student.stream,
           academicYear: req.body.academicYear, term: req.body.term,
           termMark, examMark, projectMark, finalMark, ...gradeInfo,
