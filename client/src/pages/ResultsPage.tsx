@@ -420,11 +420,11 @@ export default function ResultsPage() {
                 <button onClick={() => setShowAddModal(false)}><X size={20} /></button>
               </div>
               <form onSubmit={handleAdd} className="space-y-4">
-                <div><label className="label">Student</label><select className="input-field" value={addForm.student} onChange={e => setAddForm({ ...addForm, student: e.target.value })} required>
+                <div><label className="label">Student</label><select className="input-field" value={addForm.student} onChange={e => { const studentId = e.target.value; const student = students.find((s: any) => s._id === studentId); const subject = subjects.find((s: any) => s._id === addForm.subject); setAddForm({ ...addForm, student: studentId, subject: subject && (subject.examBoard || 'ZIMSEC') !== (student?.examBoard || 'ZIMSEC') ? '' : addForm.subject }); }} required>
                   <option value="">Select Student</option>
                   {addStudentOptions.map(s => <option key={s._id} value={s._id}>{s.admissionNumber} - {s.firstName} {s.lastName} ({s.examBoard || 'ZIMSEC'})</option>)}
                 </select></div>
-                <div><label className="label">Subject</label><select className="input-field" value={addForm.subject} onChange={e => setAddForm({ ...addForm, subject: e.target.value })} required>
+                <div><label className="label">Subject</label><select className="input-field" value={addForm.subject} onChange={e => { const subjectId = e.target.value; const subject = subjects.find((s: any) => s._id === subjectId); const student = students.find((s: any) => s._id === addForm.student); setAddForm({ ...addForm, subject: subjectId, student: student && (student.examBoard || 'ZIMSEC') !== (subject?.examBoard || 'ZIMSEC') ? '' : addForm.student }); }} required>
                   <option value="">Select Subject</option>
                   {addSubjectOptions.map(s => <option key={s._id} value={s._id}>{s.name} ({s.examBoard || 'ZIMSEC'})</option>)}
                 </select></div>
