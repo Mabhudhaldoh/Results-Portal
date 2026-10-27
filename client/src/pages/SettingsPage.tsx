@@ -98,16 +98,16 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold">Grade Mark Composition</h2>
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-            <p className="text-2xl font-bold text-mlk-blue">80%</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Exam Mark</p>
+            <p className="text-2xl font-bold text-mlk-blue">100%</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Exam Mark (final)</p>
           </div>
           <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-center">
-            <p className="text-2xl font-bold text-emerald-600">20%</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Project Mark</p>
+            <p className="text-2xl font-bold text-emerald-600">Reference</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Term Mark (except Term 1 special classes)</p>
           </div>
         </div>
-        <p className="text-sm text-gray-500">Grade Mark = 80% Exam Mark + 20% Project Mark (out of 100%).</p>
-        <p className="text-sm text-gray-500">The Term Mark is recorded for reference only and does not affect the Grade Mark.</p>
+        <p className="text-sm text-gray-500">For Term 2 and Term 3, and for Form 4 / Upper Six in Term 1, the Examination Mark alone determines the final percentage.</p>
+        <p className="text-sm text-gray-500">For Form 1, Form 2, Form 3 and Lower Six in Term 1, the Term Mark is used as the final mark because no examination is written. Project marks are recorded for reference only.</p>
       </div>
       <div className="card space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2"><DollarSign size={18} /> Fees Configuration</h2>
