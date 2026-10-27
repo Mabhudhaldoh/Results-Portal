@@ -228,6 +228,11 @@ export default function ResultsPage() {
     return <span className={`badge ${map[status] || 'badge-gray'}`}>{status}</span>;
   };
 
+  const selectedAddStudent = students.find((s: any) => s._id === addForm.student);
+  const selectedAddSubject = subjects.find((s: any) => s._id === addForm.subject);
+  const addBoard = selectedAddStudent?.examBoard || 'ZIMSEC';
+  const addStudentOptions = students.filter((s: any) => !selectedAddSubject || (s.examBoard || 'ZIMSEC') === (selectedAddSubject.examBoard || 'ZIMSEC'));
+  const addSubjectOptions = subjects.filter((s: any) => !selectedAddStudent || (s.examBoard || 'ZIMSEC') === addBoard);
   const activeYear = academicYears.find(y => y.isActive);
 
   return (
@@ -288,7 +293,7 @@ export default function ResultsPage() {
         </select>
         <select value={filters.subject} onChange={e => setFilters({ ...filters, subject: e.target.value })} className="input-field w-auto">
           <option value="">All Subjects</option>
-          {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+          {addSubjectOptions.map(s => <option key={s._id} value={s._id}>{s.name} ({s.examBoard || 'ZIMSEC'})</option>)}
         </select>
         <select value={filters.term} onChange={e => setFilters({ ...filters, term: e.target.value })} className="input-field w-auto">
           <option value="">All Terms</option>
@@ -417,7 +422,7 @@ export default function ResultsPage() {
               <form onSubmit={handleAdd} className="space-y-4">
                 <div><label className="label">Student</label><select className="input-field" value={addForm.student} onChange={e => setAddForm({ ...addForm, student: e.target.value })} required>
                   <option value="">Select Student</option>
-                  {students.map(s => <option key={s._id} value={s._id}>{s.admissionNumber} - {s.firstName} {s.lastName}</option>)}
+                  {addStudentOptions.map(s => <option key={s._id} value={s._id}>{s.admissionNumber} - {s.firstName} {s.lastName} ({s.examBoard || 'ZIMSEC'})</option>)}
                 </select></div>
                 <div><label className="label">Subject</label><select className="input-field" value={addForm.subject} onChange={e => setAddForm({ ...addForm, subject: e.target.value })} required>
                   <option value="">Select Subject</option>
