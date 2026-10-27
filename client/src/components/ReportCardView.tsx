@@ -1,13 +1,8 @@
-import { useEffect, useState } from 'react';
-import api from '../services/api';
-
 interface Props {
   report: any;
 }
 
 export default function ReportCardView({ report }: Props) {
-  const [headmasterSignature, setHeadmasterSignature] = useState('');
-  useEffect(() => { api.get('/settings').then(res => setHeadmasterSignature(res.data.settings?.headmasterSignature || '')).catch(() => {}); }, []);
   const att = report.attendance;
   const attPercent = att && att.totalDays && att.daysPresent != null ? Math.round((att.daysPresent / att.totalDays) * 100) + '%' : '-';
   const classLabel = String(report.student?.className?.name || report.student?.className || '').trim();
@@ -118,7 +113,7 @@ export default function ReportCardView({ report }: Props) {
 
           <div className="grid grid-cols-2 gap-8 mt-5 pt-4 report-footer">
             <div>
-              <div className="h-12 border-b-2 border-gray-400 mb-1 flex items-end justify-start">{headmasterSignature && <img src={headmasterSignature} alt="Headmaster signature" className="max-h-12 max-w-full object-contain object-left-bottom" />}</div>
+              <div className="h-12 border-b-2 border-gray-400 mb-1 flex items-end justify-start">{report.settings?.headmasterSignature && <img src={report.settings.headmasterSignature} alt="Headmaster signature" className="max-h-12 max-w-full object-contain object-left-bottom" />}</div>
               <p className="text-sm font-semibold text-mlk-blue">Headmaster's Signature & Stamp</p>
               <p className="text-xs text-gray-400">Date: _______________</p>
             </div>
