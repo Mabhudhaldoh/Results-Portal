@@ -128,6 +128,8 @@ exports.uploadExcelStudents = async (req, res) => {
     const errors = [];
     for (const row of data) {
       try {
+        const classValue = row['Class'] || row['className'] || '';
+        const classRecord = classValue ? (await db.collection('classes').findById(classValue) || await db.collection('classes').findOne({ name: classValue })) : null;
         const student = await db.collection('users').create({
           admissionNumber: row['Admission Number'] || row['admissionNumber'],
           firstName: row['First Name'] || row['firstName'],
@@ -138,7 +140,7 @@ exports.uploadExcelStudents = async (req, res) => {
           phone: row['Phone'] || row['phone'] || '',
           parentName: row['Parent Name'] || row['parentName'] || '',
           parentPhone: row['Parent Phone'] || row['parentPhone'] || '',
-          className: row['Class'] || row['className'] || '',
+          className: classRecord?._id || classValue,
           stream: row['Stream'] || row['stream'] || '',
           enrollmentYear: row['Year'] || row['enrollmentYear'] || new Date().getFullYear(),
           feesRequired: row['Fees Required'] || row['feesRequired'] || 0,
