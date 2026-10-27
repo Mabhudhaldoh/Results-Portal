@@ -27,6 +27,9 @@ export default function ReportCardView({ report }: Props) {
         .report-card-print .report-header, .report-card-print .report-header h1, .report-card-print .report-header h2, .report-card-print .report-header p { color: #ffffff !important; }
         .report-card-print .report-table th { color: #ffffff !important; }
         .report-card-print .badge { color: #1f2937 !important; background: #e5e7eb !important; }
+        .report-card-print .report-summary p { color: #374151 !important; }
+        .report-card-print .report-summary .summary-value { color: #111827 !important; }
+        .report-card-print .report-summary .pass-count { color: #b91c1c !important; }
         .report-header { background: linear-gradient(135deg, #1e3a8a 0%, #b91c1c 100%); color: white; padding: 16px 20px; border-radius: 8px 8px 0 0; text-align: center; }
         .report-divider { height: 2px; background: linear-gradient(90deg, #1e3a8a, #b91c1c, #1e3a8a); margin: 10px 0; }
         .report-table th { background: #b91c1c; color: white; padding: 6px 8px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -93,10 +96,10 @@ export default function ReportCardView({ report }: Props) {
           </table>
           {!isAdvancedLevel && <p className="text-xs text-gray-500 mb-3">Form 1–4: grades A, B and C are passes. Grade D and below are fails.</p>}
           {isAdvancedLevel && <p className="text-xs text-gray-500 mb-3">Advanced Level points: A = 5, B = 4, C = 3, D = 2, E = 1. Grades below E are fails.</p>}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 rounded-lg" style={{ background: 'linear-gradient(135deg, #eff6ff, #fef2f2)' }}>
-            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isAdvancedLevel ? 'Total Points' : 'Subjects Passed'}</p><p className="text-2xl font-bold" style={{ color: '#b91c1c' }}>{isAdvancedLevel ? totalPoints : passedCount}</p></div>
-            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p><p className="text-2xl font-bold text-gray-800">{reportResults.length}</p></div>
-            <div className="text-center"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Average Mark</p><p className="text-2xl font-bold text-gray-800">{report.average ?? '-'}%</p></div>
+          <div className="report-summary grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 rounded-lg" style={{ background: 'linear-gradient(135deg, #eff6ff, #fef2f2)' }}>
+            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isAdvancedLevel ? 'Total Points' : 'Subjects Passed'}</p><p className="summary-value pass-count text-2xl font-bold">{isAdvancedLevel ? totalPoints : passedCount}</p></div>
+            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p><p className="summary-value text-2xl font-bold">{reportResults.length}</p></div>
+            <div className="text-center"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Average Mark</p><p className="summary-value text-2xl font-bold">{report.average ?? '-'}%</p></div>
           </div>
 
           {(att || report.student?.sports) && (
