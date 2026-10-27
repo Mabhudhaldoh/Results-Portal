@@ -12,7 +12,8 @@ export default function ReportCardView({ report }: Props) {
   const gradeOf = (r: any) => String(r.grade || '').trim().toUpperCase();
   const aLevelPoints: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
   const isPass = (r: any) => isAdvancedLevel ? Object.prototype.hasOwnProperty.call(aLevelPoints, gradeOf(r)) : ['A', 'B', 'C'].includes(gradeOf(r));
-  const passedCount = (report.results || []).filter((r: any) => isPass(r)).length;
+  const reportResults = Array.isArray(report.results) ? report.results : [];
+  const passedCount = reportResults.filter((r: any) => isPass(r)).length;
   const pointsFor = (r: any) => Number.isFinite(Number(r.points)) ? Number(r.points) : (aLevelPoints[gradeOf(r)] || 0);
   const totalPoints = (report.results || []).reduce((sum: number, r: any) => sum + (isAdvancedLevel ? pointsFor(r) : 0), 0);
 
@@ -58,15 +59,11 @@ export default function ReportCardView({ report }: Props) {
               <p><span className="font-semibold text-mlk-blue">Admission No:</span> <span className="font-mono">{report.student?.admissionNumber}</span></p>
               <p><span className="font-semibold text-mlk-blue">Gender:</span> {report.student?.gender || '-'}</p>
               <p><span className="font-semibold text-mlk-blue">Exam Board:</span> {report.student?.examBoard || report.results?.[0]?.examBoard || 'ZIMSEC'}</p>
-              <p><span className="font-semibold text-mlk-blue">Date of Birth:</span> {report.student?.dateOfBirth || report.student?.dob || '-'}</p>
-              <p><span className="font-semibold text-mlk-blue">Student Contact:</span> {report.student?.phone || report.student?.phoneNumber || '-'}</p>
             </div>
             <div>
               <p><span className="font-semibold text-mlk-blue">Class:</span> {classDisplay || '-'}</p>
               <p><span className="font-semibold text-mlk-blue">Term:</span> {report.term || '-'}</p>
               <p><span className="font-semibold text-mlk-blue">Academic Year:</span> {report.academicYear || '-'}</p>
-              <p><span className="font-semibold text-mlk-blue">Parent / Guardian:</span> {report.student?.parentName || report.student?.guardianName || '-'}</p>
-              <p><span className="font-semibold text-mlk-blue">Parent Contact:</span> {report.student?.parentPhone || report.student?.guardianPhone || '-'}</p>
             </div>
           </div>
 
@@ -82,7 +79,7 @@ export default function ReportCardView({ report }: Props) {
               {isAdvancedLevel && <th className="text-center">Points</th>}
               <th className="text-center">Result</th><th className="text-left">Remark</th>
             </tr></thead>
-            <tbody>{report.results?.map((r: any) => <tr key={r._id}>
+            <tbody>{reportResults.map((r: any) => <tr key={r._id}>
               <td className="font-medium">{r.subject?.name || '-'}</td>
               <td className="text-center">{r.termMark ?? '-'}</td>
               <td className="text-center">{r.examMark ?? '-'}</td>
@@ -98,7 +95,7 @@ export default function ReportCardView({ report }: Props) {
           {isAdvancedLevel && <p className="text-xs text-gray-500 mb-3">Advanced Level points: A = 5, B = 4, C = 3, D = 2, E = 1. Grades below E are fails.</p>}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4 p-4 rounded-lg" style={{ background: 'linear-gradient(135deg, #eff6ff, #fef2f2)' }}>
             <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isAdvancedLevel ? 'Total Points' : 'Subjects Passed'}</p><p className="text-2xl font-bold" style={{ color: '#b91c1c' }}>{isAdvancedLevel ? totalPoints : passedCount}</p></div>
-            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p><p className="text-2xl font-bold text-gray-800">{report.results?.length || 0}</p></div>
+            <div className="text-center border-r border-gray-300"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subjects Taken</p><p className="text-2xl font-bold text-gray-800">{reportResults.length}</p></div>
             <div className="text-center"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Average Mark</p><p className="text-2xl font-bold text-gray-800">{report.average ?? '-'}%</p></div>
           </div>
 
