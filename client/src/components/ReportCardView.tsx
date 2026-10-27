@@ -61,7 +61,7 @@ export default function ReportCardView({ report }: Props) {
           <table className="w-full mb-3 text-sm report-table">
             <thead><tr>
               <th className="text-left">Subject</th>
-              {!isAdvancedLevel && <th className="text-center">Term Mark</th>}
+              <th className="text-center">Term Mark</th>
               {!isAdvancedLevel && <th className="text-center">Exam Mark</th>}
               {!isAdvancedLevel && <th className="text-center">Project</th>}
               {!isAdvancedLevel && <th className="text-center">Final Mark</th>}
@@ -71,7 +71,7 @@ export default function ReportCardView({ report }: Props) {
             </tr></thead>
             <tbody>{report.results?.map((r: any) => <tr key={r._id}>
               <td className="font-medium">{r.subject?.name || '-'}</td>
-              {!isAdvancedLevel && <td className="text-center">{r.termMark ?? '-'}</td>}
+              <td className="text-center">{r.termMark ?? '-'}</td>
               {!isAdvancedLevel && <td className="text-center">{r.examMark ?? '-'}</td>}
               {!isAdvancedLevel && <td className="text-center">{r.projectMark ?? '-'}</td>}
               {!isAdvancedLevel && <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>}
