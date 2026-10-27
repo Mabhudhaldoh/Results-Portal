@@ -229,7 +229,7 @@ export default function ResultsPage() {
   };
 
   const editClassLabel = String(editResult?.className?.name || editResult?.className || '').toLowerCase().replace(/\s+/g, ' ').trim();
-  const editNoExamTermOne = editResult?.term === 'Term 1' && /^(form\s*1|form\s*2|form\s*3|lower\s*(six|6))$/.test(editClassLabel);
+  const editNoExamTermOne = editResult?.term === 'Term 1' && /^(form\s*[123]|lower\s*(six|6))/.test(editClassLabel);
   const selectedAddStudent = students.find((s: any) => s._id === addForm.student);
   const selectedAddSubject = subjects.find((s: any) => s._id === addForm.subject);
   const addBoard = selectedAddStudent?.examBoard || 'ZIMSEC';
