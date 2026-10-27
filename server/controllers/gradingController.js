@@ -12,11 +12,15 @@ exports.getGradings = async (req, res) => {
 
 exports.createGrading = async (req, res) => {
   try {
+    const examBoard = req.body.examBoard || 'ZIMSEC';
+    if (!['ZIMSEC', 'Cambridge'].includes(examBoard)) return res.status(400).json({ success: false, message: 'Examination board must be ZIMSEC or Cambridge' });
     if (req.body.isActive) {
       const existing = await db.collection('gradings').find();
-      for (const g of existing) { g.isActive = false; await db.collection('gradings').save(g); }
+      for (const g of existing) {
+        if ((g.examBoard || 'ZIMSEC') === examBoard) { g.isActive = false; await db.collection('gradings').save(g); }
+      }
     }
-    const grading = await db.collection('gradings').create(req.body);
+    const grading = await db.collection('gradings').create({ ...req.body, examBoard });
     res.status(201).json({ success: true, grading });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -48,6 +52,10 @@ exports.applyGrading = async (req, res) => {
     if (!grading) return res.status(404).json({ success: false, message: 'Grading system not found' });
     const results = await db.collection('results').find();
     for (const r of results) {
+      const student = await db.collection('users').findById(r.student);
+      const subject = await db.collection('subjects').findById(r.subject);
+      const resultBoard = r.examBoard || student?.examBoard || subject?.examBoard || 'ZIMSEC';
+      if (resultBoard !== (grading.examBoard || 'ZIMSEC')) continue;
       const level = grading.levels.find(l => r.finalMark >= l.minMark && r.finalMark <= l.maxMark);
       if (level) {
         r.grade = level.grade;
