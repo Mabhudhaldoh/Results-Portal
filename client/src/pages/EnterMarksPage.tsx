@@ -46,9 +46,12 @@ export default function EnterMarksPage() {
   useEffect(() => {
     if (selectedClass && selectedSubject && selectedYear) {
       api.get(`/students?className=${selectedClass}&limit=500`).then(r => {
-        setStudents(r.data.students);
+        const selectedSubjectRecord = allSubjects.find((s: any) => s._id === selectedSubject);
+        const board = selectedSubjectRecord?.examBoard || 'ZIMSEC';
+        const matchingStudents = (r.data.students || []).filter((s: any) => (s.examBoard || 'ZIMSEC') === board);
+        setStudents(matchingStudents);
         const m: Record<string, any> = {};
-        r.data.students.forEach((s: any) => { m[s._id] = { termMark: 0, examMark: 0, projectMark: 0, teacherRemark: '' }; });
+        matchingStudents.forEach((s: any) => { m[s._id] = { termMark: 0, examMark: 0, projectMark: 0, teacherRemark: '' }; });
         setMarks(m);
       });
       api.get(`/results?className=${selectedClass}&subject=${selectedSubject}&term=${term}`).then(r => {
@@ -142,6 +145,9 @@ export default function EnterMarksPage() {
   };
 
   const activeYear = academicYears.find(y => y.isActive);
+  const selectedClassName = String(classes.find(c => c._id === selectedClass)?.name || '').toLowerCase().replace(/\\s+/g, ' ').trim();
+  const noExamTermOne = term === 'Term 1' && /^(form\\s*1|form\\s*2|form\\s*3|lower\\s*(six|6))$/.test(selectedClassName);
+  const previewFinal = (m: any) => noExamTermOne ? (Number(m.termMark) || 0) : (Number(m.examMark) || 0);
 
   return (
     <div className="space-y-6">
@@ -173,6 +179,8 @@ export default function EnterMarksPage() {
         </div>
       </div>
 
+      {selectedSubject && <p className="text-sm text-gray-500">Board: {allSubjects.find((s: any) => s._id === selectedSubject)?.examBoard || "ZIMSEC"}. {noExamTermOne ? "Term 1 uses the Term Mark as the final mark for this class." : "Final percentage is based on the Examination Mark; Term Mark is for reference only."}</p>}
+
       {students.length > 0 && (
         <div className="card">
           <div className="flex items-center justify-between mb-4">
@@ -187,9 +195,9 @@ export default function EnterMarksPage() {
                   <th className="px-3 py-2">Name</th>
                   <th className="px-3 py-2 text-center">Existing</th>
                   <th className="px-3 py-2">Term Mark</th>
-                  <th className="px-3 py-2">Exam Mark</th>
+                  <th className="px-3 py-2">{noExamTermOne ? "Exam Mark (not used in Term 1)" : "Exam Mark"}</th>
                   <th className="px-3 py-2">Project Mark</th>
-                  <th className="px-3 py-2">Final</th>
+                  <th className="px-3 py-2">Final (%)</th>
                   <th className="px-3 py-2">Remark</th>
                 </tr>
               </thead>
@@ -197,7 +205,7 @@ export default function EnterMarksPage() {
                 {students.map(s => {
                   const existing = existingResults[s._id];
                   const m = marks[s._id] || { termMark: 0, examMark: 0, projectMark: 0, teacherRemark: '' };
-                  const final = Math.round((m.examMark * 0.8 + m.projectMark * 0.2) * 100) / 100;
+                  const final = previewFinal(m);
                   return (
                     <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                       <td className="px-3 py-2 text-sm font-mono">{s.admissionNumber}</td>
@@ -206,7 +214,7 @@ export default function EnterMarksPage() {
                         {existing ? <span className="badge badge-success text-xs">{existing.grade || 'Yes'}</span> : <span className="text-gray-300">-</span>}
                       </td>
                       <td className="px-3 py-2"><input type="number" min="0" max="100" className="input-field w-20 text-center" value={m.termMark} onChange={e => updateMark(s._id, 'termMark', +e.target.value)} /></td>
-                      <td className="px-3 py-2"><input type="number" min="0" max="100" className="input-field w-20 text-center" value={m.examMark} onChange={e => updateMark(s._id, 'examMark', +e.target.value)} /></td>
+                      <td className="px-3 py-2"><input type="number" min="0" max="100" className="input-field w-20 text-center" value={m.examMark} disabled={noExamTermOne} onChange={e => updateMark(s._id, 'examMark', +e.target.value)} /></td>
                       <td className="px-3 py-2"><input type="number" min="0" max="100" className="input-field w-20 text-center" value={m.projectMark} onChange={e => updateMark(s._id, 'projectMark', +e.target.value)} /></td>
                       <td className="px-3 py-2 text-sm font-bold">{m.termMark > 0 || m.examMark > 0 || m.projectMark > 0 ? final : '-'}</td>
                       <td className="px-3 py-2"><input className="input-field w-32" value={m.teacherRemark} onChange={e => updateMark(s._id, 'teacherRemark', e.target.value)} placeholder="Remark" /></td>
