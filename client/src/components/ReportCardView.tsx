@@ -11,7 +11,8 @@ export default function ReportCardView({ report }: Props) {
   const aLevelPoints: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
   const isPass = (r: any) => isAdvancedLevel ? Object.prototype.hasOwnProperty.call(aLevelPoints, gradeOf(r)) : ['A', 'B', 'C'].includes(gradeOf(r));
   const passedCount = (report.results || []).filter((r: any) => isPass(r)).length;
-  const totalPoints = (report.results || []).reduce((sum: number, r: any) => sum + (isAdvancedLevel ? (aLevelPoints[gradeOf(r)] || 0) : 0), 0);
+  const pointsFor = (r: any) => Number.isFinite(Number(r.points)) ? Number(r.points) : (aLevelPoints[gradeOf(r)] || 0);
+  const totalPoints = (report.results || []).reduce((sum: number, r: any) => sum + (isAdvancedLevel ? pointsFor(r) : 0), 0);
 
   return (
     <>
@@ -76,7 +77,7 @@ export default function ReportCardView({ report }: Props) {
               {!isAdvancedLevel && <td className="text-center">{r.projectMark ?? '-'}</td>}
               {!isAdvancedLevel && <td className="text-center font-bold text-mlk-blue">{r.finalMark ?? '-'}</td>}
               <td className="text-center"><span className="badge badge-info">{gradeOf(r) || '-'}</span></td>
-              {isAdvancedLevel && <td className="text-center font-bold">{aLevelPoints[gradeOf(r)] || 0}</td>}
+              {isAdvancedLevel && <td className="text-center font-bold">{pointsFor(r)}</td>}
               <td className="text-center font-semibold">{isPass(r) ? 'PASS' : 'FAIL'}</td>
               <td className="text-sm">{r.teacherRemark || '-'}</td>
             </tr>)}</tbody>
