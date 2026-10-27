@@ -4,7 +4,7 @@ async function getEffectiveYearTerm(academicYear, term) {
   const settingsArr = await db.collection('settings').find();
   const settings = settingsArr[0] || {};
   return {
-    academicYear: academicYear || settings.academicYear || '',
+    academicYear: academicYear || settings.academicYear || settings.currentAcademicYear || '',
     term: term || settings.currentTerm || '',
   };
 }
@@ -51,6 +51,8 @@ exports.getStudentReport = async (req, res) => {
     const average = results.length > 0 ? Math.round((totalMarks / results.length) * 100) / 100 : 0;
 
     const eff = await getEffectiveYearTerm(academicYear, term);
+    const yearRecord = eff.academicYear ? await db.collection('academicYears').findById(eff.academicYear) : null;
+    const displayAcademicYear = yearRecord?.name || eff.academicYear || '';
     const attendanceArr = await db.collection('attendance').find({ student: studentIdParam, academicYear: eff.academicYear, term: eff.term });
     const attendance = attendanceArr.length > 0 ? attendanceArr[0] : null;
 
@@ -59,7 +61,7 @@ exports.getStudentReport = async (req, res) => {
     studentData.className = await db.collection('classes').findById(student.className) || student.className;
     studentData.stream = await db.collection('streams').findById(student.stream) || student.stream;
 
-    res.json({ success: true, report: { student: studentData, results, average, attendance, settings, academicYear: eff.academicYear, term: eff.term, resultsHidden, resultsHiddenMessage } });
+    res.json({ success: true, report: { student: studentData, results, average, attendance, settings, academicYear: displayAcademicYear, term: eff.term, resultsHidden, resultsHiddenMessage } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
