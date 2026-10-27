@@ -8,7 +8,7 @@ export default function GradingPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
-    name: '', isActive: false,
+    name: '', examBoard: 'ZIMSEC', isActive: false,
     levels: [
       { grade: 'A', minMark: 80, maxMark: 100, points: 5, remark: 'Excellent' },
       { grade: 'B', minMark: 70, maxMark: 79, points: 4, remark: 'Very Good' },
@@ -58,6 +58,7 @@ export default function GradingPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold">{g.name}</h3>
+                <p className="text-xs text-gray-500">{g.examBoard || "ZIMSEC"} grading</p>
                 {g.isActive && <span className="badge badge-success">Active</span>}
               </div>
               <div className="flex gap-2">
@@ -100,6 +101,7 @@ export default function GradingPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div><label className="label">Name</label><input className="input-field" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+              <div><label className="label">Examination Board *</label><select className="input-field" value={form.examBoard} onChange={e => setForm({ ...form, examBoard: e.target.value })} required><option value="ZIMSEC">ZIMSEC</option><option value="Cambridge">Cambridge</option></select></div>
               <div className="flex items-center gap-2">
                 <input type="checkbox" checked={form.isActive} onChange={e => setForm({ ...form, isActive: e.target.checked })} className="rounded" />
                 <span className="text-sm">Set as active</span>
