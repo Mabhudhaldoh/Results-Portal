@@ -293,7 +293,7 @@ export default function ResultsPage() {
         </select>
         <select value={filters.subject} onChange={e => setFilters({ ...filters, subject: e.target.value })} className="input-field w-auto">
           <option value="">All Subjects</option>
-          {addSubjectOptions.map(s => <option key={s._id} value={s._id}>{s.name} ({s.examBoard || 'ZIMSEC'})</option>)}
+          {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
         </select>
         <select value={filters.term} onChange={e => setFilters({ ...filters, term: e.target.value })} className="input-field w-auto">
           <option value="">All Terms</option>
@@ -426,7 +426,7 @@ export default function ResultsPage() {
                 </select></div>
                 <div><label className="label">Subject</label><select className="input-field" value={addForm.subject} onChange={e => setAddForm({ ...addForm, subject: e.target.value })} required>
                   <option value="">Select Subject</option>
-                  {subjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                  {addSubjectOptions.map(s => <option key={s._id} value={s._id}>{s.name} ({s.examBoard || 'ZIMSEC'})</option>)}
                 </select></div>
                 <div><label className="label">Class</label><select className="input-field" value={addForm.className} onChange={e => setAddForm({ ...addForm, className: e.target.value })} required>
                   <option value="">Select Class</option>
