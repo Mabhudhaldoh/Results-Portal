@@ -254,6 +254,7 @@ export default function StudentsPage() {
                 <th className="px-4 py-3">Adm No.</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Gender</th>
+                <th className="px-4 py-3">Exam Board</th>
                 <th className="px-4 py-3">Class</th>
                 <th className="px-4 py-3">Stream</th>
                 <th className="px-4 py-3">Fees Required</th>
@@ -267,11 +268,11 @@ export default function StudentsPage() {
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    {[...Array(10)].map((_, j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>)}
+                    {[...Array(12)].map((_, j) => <td key={j} className="px-4 py-3"><div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>)}
                   </tr>
                 ))
               ) : students.length === 0 ? (
-                <tr><td colSpan={11} className="px-4 py-12 text-center text-gray-500">No students found</td></tr>
+                <tr><td colSpan={12} className="px-4 py-12 text-center text-gray-500">No students found</td></tr>
               ) : (
                 students.map(s => (
                   <tr key={s._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -279,6 +280,7 @@ export default function StudentsPage() {
                     <td className="px-4 py-3 text-sm font-mono">{s.admissionNumber}</td>
                     <td className="px-4 py-3 text-sm font-medium">{s.firstName} {s.lastName}</td>
                     <td className="px-4 py-3 text-sm">{s.gender}</td>
+                    <td className="px-4 py-3 text-sm"><span className="badge badge-info">{s.examBoard || "ZIMSEC"}</span></td>
                     <td className="px-4 py-3 text-sm">{s.className?.name || '-'}</td>
                     <td className="px-4 py-3 text-sm">{s.stream?.name || '-'}</td>
                     <td className="px-4 py-3 text-sm font-medium">${s.feesRequired || 0}</td>
