@@ -74,7 +74,7 @@ exports.createStudent = async (req, res) => {
       const s = (await db.collection('settings').find())[0];
       defaultFee = s?.defaultFeesRequired || 0;
     }
-    const student = await db.collection('users').create({ ...rest, password: hashedPassword, role: 'student', isActive: true, feesRequired: rest.feesRequired ?? defaultFee, feesPaid: rest.feesPaid ?? 0, feesBalance: (rest.feesRequired ?? defaultFee) - (rest.feesPaid ?? 0) });
+    const student = await db.collection('users').create({ ...rest, examBoard: rest.examBoard || 'ZIMSEC', password: hashedPassword, role: 'student', isActive: true, feesRequired: rest.feesRequired ?? defaultFee, feesPaid: rest.feesPaid ?? 0, feesBalance: (rest.feesRequired ?? defaultFee) - (rest.feesPaid ?? 0) });
     const { password: _, ...safeStudent } = student;
     res.status(201).json({ success: true, student: safeStudent });
   } catch (error) {
@@ -86,7 +86,7 @@ exports.bulkCreateStudents = async (req, res) => {
   try {
     const { students } = req.body;
     const hashedPassword = await bcrypt.hash('student123', 10);
-    const created = await db.collection('users').insertMany(students.map(s => ({ ...s, password: hashedPassword, role: 'student', isActive: true })));
+    const created = await db.collection('users').insertMany(students.map(s => ({ ...s, examBoard: s.examBoard || 'ZIMSEC', password: hashedPassword, role: 'student', isActive: true })));
     res.status(201).json({ success: true, count: created.length, students: created });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -103,7 +103,7 @@ exports.bulkQuickCreate = async (req, res) => {
     const errors = [];
     for (const s of students) {
       try {
-        const student = await db.collection('users').create({ ...s, password: hashedPassword, role: 'student', isActive: true, feesRequired: s.feesRequired ?? defaultFee, feesPaid: s.feesPaid ?? 0, feesBalance: (s.feesRequired ?? defaultFee) - (s.feesPaid ?? 0) });
+        const student = await db.collection('users').create({ ...s, examBoard: s.examBoard || 'ZIMSEC', password: hashedPassword, role: 'student', isActive: true, feesRequired: s.feesRequired ?? defaultFee, feesPaid: s.feesPaid ?? 0, feesBalance: (s.feesRequired ?? defaultFee) - (s.feesPaid ?? 0) });
         const { password: _, ...safe } = student;
         created.push(safe);
       } catch (err) {
@@ -133,6 +133,7 @@ exports.uploadExcelStudents = async (req, res) => {
           firstName: row['First Name'] || row['firstName'],
           lastName: row['Last Name'] || row['lastName'],
           gender: row['Gender'] || row['gender'] || 'Male',
+          examBoard: row['Examination Board'] || row['examBoard'] || 'ZIMSEC',
           email: row['Email'] || row['email'] || '',
           phone: row['Phone'] || row['phone'] || '',
           parentName: row['Parent Name'] || row['parentName'] || '',
