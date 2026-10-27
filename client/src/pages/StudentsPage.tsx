@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 
 interface Student {
   _id: string; admissionNumber: string; firstName: string; lastName: string;
-  gender: string; email: string; phone: string; parentName: string; parentPhone: string;
+  gender: string; examBoard?: string; email: string; phone: string; parentName: string; parentPhone: string;
   className: { _id: string; name: string }; stream: { _id: string; name: string };
   isActive: boolean; enrollmentYear: number; address?: string; sports?: string;
   feesPaid?: number; feesRequired?: number; feesBalance?: number;
@@ -22,7 +22,7 @@ export default function StudentsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [form, setForm] = useState({
-    firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male',
+    firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male', examBoard: 'ZIMSEC',
     phone: '', parentName: '', parentPhone: '', address: '', enrollmentYear: 2026,
     className: '', stream: '', sports: '',
   });
@@ -75,7 +75,7 @@ export default function StudentsPage() {
       } else {
         await api.post('/users', { ...payload, role: 'student', password: 'student123' });
         toast.success(`${payload.firstName} ${payload.lastName} created`);
-        setForm({ firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male', phone: '', parentName: '', parentPhone: '', address: '', enrollmentYear: 2026, className: '', stream: '', sports: '' });
+        setForm({ firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male', examBoard: 'ZIMSEC', phone: '', parentName: '', parentPhone: '', address: '', enrollmentYear: 2026, className: '', stream: '', sports: '' });
       }
       fetchStudents();
     } catch (err: any) { toast.error(err.response?.data?.message || 'Error'); }
@@ -224,7 +224,7 @@ export default function StudentsPage() {
         <div className="flex gap-2">
           <button onClick={() => { setShowQuickAdd(true); setQuickRows([{ ...emptyRow }]); }} className="btn-secondary text-sm"><Table size={16} /> Quick Add Multiple</button>
           <button onClick={() => setShowUploadModal(true)} className="btn-secondary text-sm"><Upload size={16} /> Excel Upload</button>
-          <button onClick={() => { setShowModal(true); setEditStudent(null); setForm({ firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male', phone: '', parentName: '', parentPhone: '', address: '', enrollmentYear: 2026, className: '', stream: '', sports: '' }); }} className="btn-primary">
+          <button onClick={() => { setShowModal(true); setEditStudent(null); setForm({ firstName: '', lastName: '', email: '', admissionNumber: '', gender: 'Male', examBoard: 'ZIMSEC', phone: '', parentName: '', parentPhone: '', address: '', enrollmentYear: 2026, className: '', stream: '', sports: '' }); }} className="btn-primary">
             <Plus size={18} /> Add Student
           </button>
         </div>
@@ -332,6 +332,7 @@ export default function StudentsPage() {
                   <div><label className="label">Gender</label><select className="input-field" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}><option>Male</option><option>Female</option></select></div>
                   <div><label className="label">Phone</label><input className="input-field" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
                 </div>
+                <div><label className="label">Examination Board *</label><select className="input-field" value={form.examBoard || 'ZIMSEC'} onChange={e => setForm({ ...form, examBoard: e.target.value })} required><option value="ZIMSEC">ZIMSEC</option><option value="Cambridge">Cambridge</option></select><p className="text-xs text-gray-500 mt-1">Only subjects and grading systems for this board will be available to the student.</p></div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="label">Class *</label>
