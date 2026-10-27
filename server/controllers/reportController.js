@@ -44,7 +44,8 @@ exports.getStudentReport = async (req, res) => {
         const subject = await db.collection('subjects').findById(r.subject) || null;
         const teacher = await db.collection('users').findById(r.teacher) || null;
         const resultBoard = r.examBoard || student.examBoard || subject?.examBoard || 'ZIMSEC';
-        let grade = r.grade || '';
+        let grade = String(r.grade || '').trim();
+        if (grade === '-' || grade === '—') grade = '';
         let points = Number.isFinite(Number(r.points)) ? Number(r.points) : 0;
         let gradeRemark = r.gradeRemark || '';
         // Older results may have a final mark but no grade stored. Resolve the
