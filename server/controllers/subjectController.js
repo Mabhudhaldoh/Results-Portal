@@ -2,9 +2,10 @@ const db = require("../config/database");
 
 exports.getSubjects = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, examBoard } = req.query;
     let subjects = await db.collection('subjects').find();
     if (category) subjects = subjects.filter(s => s.category === category);
+    if (examBoard) subjects = subjects.filter(s => (s.examBoard || 'ZIMSEC') === examBoard);
     subjects = await Promise.all(subjects.map(async s => {
       s.teachers = (await Promise.all((s.teachers || []).map(async id => {
         const t = await db.collection('users').findById(id);
@@ -21,7 +22,9 @@ exports.getSubjects = async (req, res) => {
 
 exports.createSubject = async (req, res) => {
   try {
-    const subject = await db.collection('subjects').create(req.body);
+    const examBoard = req.body.examBoard || 'ZIMSEC';
+    if (!['ZIMSEC', 'Cambridge'].includes(examBoard)) return res.status(400).json({ success: false, message: 'Examination board must be ZIMSEC or Cambridge' });
+    const subject = await db.collection('subjects').create({ ...req.body, examBoard });
     res.status(201).json({ success: true, subject });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -30,7 +33,9 @@ exports.createSubject = async (req, res) => {
 
 exports.updateSubject = async (req, res) => {
   try {
-    const subject = await db.collection('subjects').findByIdAndUpdate(req.params.id, req.body);
+    const updates = { ...req.body };
+    if (updates.examBoard && !['ZIMSEC', 'Cambridge'].includes(updates.examBoard)) return res.status(400).json({ success: false, message: 'Examination board must be ZIMSEC or Cambridge' });
+    const subject = await db.collection('subjects').findByIdAndUpdate(req.params.id, updates);
     if (!subject) return res.status(404).json({ success: false, message: 'Subject not found' });
     res.json({ success: true, subject });
   } catch (error) {
