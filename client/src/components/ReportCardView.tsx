@@ -5,7 +5,9 @@ interface Props {
 export default function ReportCardView({ report }: Props) {
   const att = report.attendance;
   const attPercent = att && att.totalDays && att.daysPresent != null ? Math.round((att.daysPresent / att.totalDays) * 100) + '%' : '-';
-  const classLabel = String(report.student?.className?.name || report.student?.className?.className || (typeof report.student?.className === 'string' ? report.student.className : '') || '').trim();\n  const classDisplay = [report.student?.className?.name || (typeof report.student?.className === 'string' ? report.student.className : report.student?.className?.className), report.student?.stream?.name || (typeof report.student?.stream === 'string' ? report.student.stream : '')].filter(Boolean).join(' ');\n  const fullName = [report.student?.firstName, report.student?.middleName, report.student?.lastName].filter(Boolean).join(' ') || report.student?.name || '-';
+  const classLabel = String(report.student?.className?.name || report.student?.className?.className || (typeof report.student?.className === 'string' ? report.student.className : '') || '').trim();
+  const classDisplay = [report.student?.className?.name || (typeof report.student?.className === 'string' ? report.student.className : report.student?.className?.className), report.student?.stream?.name || (typeof report.student?.stream === 'string' ? report.student.stream : '')].filter(Boolean).join(' ');
+  const fullName = [report.student?.firstName, report.student?.middleName, report.student?.lastName].filter(Boolean).join(' ') || report.student?.name || '-';
   const isAdvancedLevel = /lower\s*(six|6)|upper\s*(six|6)|form\s*6|sixth\s*form|advanced\s*level/i.test(classLabel);
   const gradeOf = (r: any) => String(r.grade || '').trim().toUpperCase();
   const aLevelPoints: Record<string, number> = { A: 5, B: 4, C: 3, D: 2, E: 1 };
@@ -17,7 +19,13 @@ export default function ReportCardView({ report }: Props) {
   return (
     <>
       <style>{`
-        .report-card-print { border: 2px solid #1e3a8a; border-radius: 10px; background: #ffffff !important; color: #111827 !important; box-shadow: 0 4px 24px rgba(0,0,0,0.1); overflow: hidden; width: 794px; max-width: 100%; font-family: Arial, Helvetica, sans-serif; }\n        .report-card-print p, .report-card-print span, .report-card-print td, .report-card-print th, .report-card-print h1, .report-card-print h2, .report-card-print h3, .report-card-print div { color: inherit; }\n        .report-card-print .text-mlk-blue { color: #1e3a8a !important; }\n        .report-card-print .text-gray-400, .report-card-print .text-gray-500 { color: #4b5563 !important; }\n        .report-card-print .report-header, .report-card-print .report-header h1, .report-card-print .report-header h2, .report-card-print .report-header p { color: #ffffff !important; }\n        .report-card-print .report-table th { color: #ffffff !important; }\n        .report-card-print .badge { color: #1f2937 !important; background: #e5e7eb !important; }
+        .report-card-print { border: 2px solid #1e3a8a; border-radius: 10px; background: #ffffff !important; color: #111827 !important; box-shadow: 0 4px 24px rgba(0,0,0,0.1); overflow: hidden; width: 794px; max-width: 100%; font-family: Arial, Helvetica, sans-serif; }
+        .report-card-print p, .report-card-print span, .report-card-print td, .report-card-print th, .report-card-print h1, .report-card-print h2, .report-card-print h3, .report-card-print div { color: inherit; }
+        .report-card-print .text-mlk-blue { color: #1e3a8a !important; }
+        .report-card-print .text-gray-400, .report-card-print .text-gray-500 { color: #4b5563 !important; }
+        .report-card-print .report-header, .report-card-print .report-header h1, .report-card-print .report-header h2, .report-card-print .report-header p { color: #ffffff !important; }
+        .report-card-print .report-table th { color: #ffffff !important; }
+        .report-card-print .badge { color: #1f2937 !important; background: #e5e7eb !important; }
         .report-header { background: linear-gradient(135deg, #1e3a8a 0%, #b91c1c 100%); color: white; padding: 16px 20px; border-radius: 8px 8px 0 0; text-align: center; }
         .report-divider { height: 2px; background: linear-gradient(90deg, #1e3a8a, #b91c1c, #1e3a8a); margin: 10px 0; }
         .report-table th { background: #b91c1c; color: white; padding: 6px 8px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -49,12 +57,16 @@ export default function ReportCardView({ report }: Props) {
               <p><span className="font-semibold text-mlk-blue">Name:</span> <span className="font-medium">{fullName}</span></p>
               <p><span className="font-semibold text-mlk-blue">Admission No:</span> <span className="font-mono">{report.student?.admissionNumber}</span></p>
               <p><span className="font-semibold text-mlk-blue">Gender:</span> {report.student?.gender || '-'}</p>
-              <p><span className="font-semibold text-mlk-blue">Exam Board:</span> {report.student?.examBoard || report.results?.[0]?.examBoard || 'ZIMSEC'}</p>\n              <p><span className="font-semibold text-mlk-blue">Date of Birth:</span> {report.student?.dateOfBirth || report.student?.dob || '-'}</p>\n              <p><span className="font-semibold text-mlk-blue">Student Contact:</span> {report.student?.phone || report.student?.phoneNumber || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Exam Board:</span> {report.student?.examBoard || report.results?.[0]?.examBoard || 'ZIMSEC'}</p>
+              <p><span className="font-semibold text-mlk-blue">Date of Birth:</span> {report.student?.dateOfBirth || report.student?.dob || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Student Contact:</span> {report.student?.phone || report.student?.phoneNumber || '-'}</p>
             </div>
             <div>
               <p><span className="font-semibold text-mlk-blue">Class:</span> {classDisplay || '-'}</p>
               <p><span className="font-semibold text-mlk-blue">Term:</span> {report.term || '-'}</p>
-              <p><span className="font-semibold text-mlk-blue">Academic Year:</span> {report.academicYear || '-'}</p>\n              <p><span className="font-semibold text-mlk-blue">Parent / Guardian:</span> {report.student?.parentName || report.student?.guardianName || '-'}</p>\n              <p><span className="font-semibold text-mlk-blue">Parent Contact:</span> {report.student?.parentPhone || report.student?.guardianPhone || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Academic Year:</span> {report.academicYear || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Parent / Guardian:</span> {report.student?.parentName || report.student?.guardianName || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Parent Contact:</span> {report.student?.parentPhone || report.student?.guardianPhone || '-'}</p>
             </div>
           </div>
 
