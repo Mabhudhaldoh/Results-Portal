@@ -50,6 +50,13 @@ exports.applyGrading = async (req, res) => {
   try {
     const grading = await db.collection('gradings').findById(req.params.id);
     if (!grading) return res.status(404).json({ success: false, message: 'Grading system not found' });
+    const allGradings = await db.collection('gradings').find();
+    for (const g of allGradings) {
+      if ((g.examBoard || 'ZIMSEC') === (grading.examBoard || 'ZIMSEC')) {
+        g.isActive = String(g._id) === String(grading._id);
+        await db.collection('gradings').save(g);
+      }
+    }
     const results = await db.collection('results').find();
     for (const r of results) {
       const student = await db.collection('users').findById(r.student);
