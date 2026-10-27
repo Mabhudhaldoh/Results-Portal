@@ -40,11 +40,28 @@ exports.getStudentReport = async (req, res) => {
       if (academicYear) results = results.filter(r => r.academicYear === academicYear);
       if (term) results = results.filter(r => r.term === term);
 
-      results = await Promise.all(results.map(async r => ({
-        ...r,
-        subject: await db.collection('subjects').findById(r.subject) || null,
-        teacher: await db.collection('users').findById(r.teacher) || null,
-      })));
+      results = await Promise.all(results.map(async r => {
+        const subject = await db.collection('subjects').findById(r.subject) || null;
+        const teacher = await db.collection('users').findById(r.teacher) || null;
+        const resultBoard = r.examBoard || student.examBoard || subject?.examBoard || 'ZIMSEC';
+        let grade = r.grade || '';
+        let points = Number.isFinite(Number(r.points)) ? Number(r.points) : 0;
+        let gradeRemark = r.gradeRemark || '';
+        // Older results may have a final mark but no grade stored. Resolve the
+        // grade using the active grading configuration for this student's board.
+        if (!grade && Number.isFinite(Number(r.finalMark))) {
+          const gradings = await db.collection('gradings').find();
+          const boardGradings = gradings.filter(g => (g.examBoard || 'ZIMSEC') === resultBoard);
+          const grading = boardGradings.find(g => g.isActive) || boardGradings[0];
+          const level = (grading?.levels || []).find(l => Number(r.finalMark) >= Number(l.minMark) && Number(r.finalMark) <= Number(l.maxMark));
+          if (level) {
+            grade = level.grade || '';
+            points = Number(level.points) || 0;
+            gradeRemark = level.remark || gradeRemark;
+          }
+        }
+        return { ...r, examBoard: resultBoard, grade, points, gradeRemark, subject, teacher };
+      }));
     }
 
     const totalMarks = results.reduce((sum, r) => sum + (r.finalMark || 0), 0);
