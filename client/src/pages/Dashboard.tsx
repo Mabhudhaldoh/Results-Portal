@@ -46,6 +46,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
+  const [headmasterSignature, setHeadmasterSignature] = useState('');
+  const [signatureSaving, setSignatureSaving] = useState(false);
 
   const handleChangePassword = async () => {
     if (!pwForm.current || !pwForm.newPw || !pwForm.confirm) return toast.error('Fill in all fields');
@@ -60,6 +62,28 @@ export default function Dashboard() {
       toast.error(err.response?.data?.message || 'Failed to change password');
     }
     setPwLoading(false);
+  };
+
+  useEffect(() => {
+    if (user?.role === 'headmaster') api.get('/settings').then(res => setHeadmasterSignature(res.data.settings?.headmasterSignature || '')).catch(() => {});
+  }, [user?.role]);
+
+  const handleSignatureFile = (file?: File) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return toast.error('Choose a PNG, JPEG or WebP signature image');
+    if (file.size > 1024 * 1024) return toast.error('Signature image must be under 1 MB');
+    const reader = new FileReader();
+    reader.onload = () => setHeadmasterSignature(String(reader.result || ''));
+    reader.readAsDataURL(file);
+  };
+
+  const saveHeadmasterSignature = async () => {
+    setSignatureSaving(true);
+    try {
+      await api.put('/settings', { headmasterSignature: headmasterSignature || null });
+      toast.success('Headmaster signature saved for report cards');
+    } catch (err: any) { toast.error(err.response?.data?.message || 'Could not save signature'); }
+    finally { setSignatureSaving(false); }
   };
 
   useEffect(() => {
@@ -376,6 +400,21 @@ export default function Dashboard() {
             </div>
           </div>
         )
+      )}
+
+      {user?.role === 'headmaster' && (
+        <div className="card max-w-2xl space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Headmaster Account — Report Card Signature</h3>
+            <p className="text-sm text-gray-500 mt-1">Upload a transparent PNG for the cleanest result. This signature is stored with school settings and appears on generated report cards.</p>
+          </div>
+          {headmasterSignature && <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4"><img src={headmasterSignature} alt="Headmaster signature preview" className="max-h-20 max-w-full object-contain" /></div>}
+          <div className="flex flex-wrap gap-3 items-center">
+            <input type="file" accept="image/png,image/jpeg,image/webp" className="input-field max-w-sm" onChange={e => handleSignatureFile(e.target.files?.[0])} />
+            <button onClick={saveHeadmasterSignature} disabled={signatureSaving} className="btn-primary">{signatureSaving ? 'Saving...' : 'Save Signature'}</button>
+            {headmasterSignature && <button onClick={() => setHeadmasterSignature('')} className="btn-outline">Remove</button>}
+          </div>
+        </div>
       )}
 
       <div className="card max-w-2xl">
