@@ -1,8 +1,13 @@
+import { useEffect, useState } from 'react';
+import api from '../services/api';
+
 interface Props {
   report: any;
 }
 
 export default function ReportCardView({ report }: Props) {
+  const [headmasterSignature, setHeadmasterSignature] = useState('');
+  useEffect(() => { api.get('/settings').then(res => setHeadmasterSignature(res.data.settings?.headmasterSignature || '')).catch(() => {}); }, []);
   const att = report.attendance;
   const attPercent = att && att.totalDays && att.daysPresent != null ? Math.round((att.daysPresent / att.totalDays) * 100) + '%' : '-';
   const classLabel = String(report.student?.className?.name || report.student?.className || '').trim();
@@ -48,6 +53,7 @@ export default function ReportCardView({ report }: Props) {
               <p><span className="font-semibold text-mlk-blue">Name:</span> <span className="font-medium">{report.student?.firstName} {report.student?.lastName}</span></p>
               <p><span className="font-semibold text-mlk-blue">Admission No:</span> <span className="font-mono">{report.student?.admissionNumber}</span></p>
               <p><span className="font-semibold text-mlk-blue">Gender:</span> {report.student?.gender || '-'}</p>
+              <p><span className="font-semibold text-mlk-blue">Exam Board:</span> {report.student?.examBoard || report.results?.[0]?.examBoard || 'ZIMSEC'}</p>
             </div>
             <div>
               <p><span className="font-semibold text-mlk-blue">Class:</span> {report.student?.className?.name} {report.student?.stream?.name}</p>
@@ -112,7 +118,7 @@ export default function ReportCardView({ report }: Props) {
 
           <div className="grid grid-cols-2 gap-8 mt-5 pt-4 report-footer">
             <div>
-              <div className="h-12 border-b-2 border-gray-400 mb-1"></div>
+              <div className="h-12 border-b-2 border-gray-400 mb-1 flex items-end justify-start">{headmasterSignature && <img src={headmasterSignature} alt="Headmaster signature" className="max-h-12 max-w-full object-contain object-left-bottom" />}</div>
               <p className="text-sm font-semibold text-mlk-blue">Headmaster's Signature & Stamp</p>
               <p className="text-xs text-gray-400">Date: _______________</p>
             </div>
