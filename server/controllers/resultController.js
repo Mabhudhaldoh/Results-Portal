@@ -1,19 +1,25 @@
 const db = require("../config/database");
 const XLSX = require('xlsx');
 
-function calcFinalMark(termMark, examMark, projectMark) {
-  return Math.round(((examMark || 0) * 0.8 + (projectMark || 0) * 0.2) * 100) / 100;
+async function calcFinalMark(termMark, examMark, term, studentId, classId) {
+  const classRecord = classId ? await db.collection('classes').findById(classId) : null;
+  const className = String(classRecord?.name || '').toLowerCase().replace(/\\s+/g, ' ').trim();
+  const noExamTermOneClass = /^(form\\s*1|form\\s*2|form\\s*3|lower\\s*(six|6))$/.test(className);
+  if (String(term || '').toLowerCase().replace(/\\s+/g, ' ').trim() === 'term 1' && noExamTermOneClass) {
+    return Math.round((Number(termMark) || 0) * 100) / 100;
+  }
+  // Term marks are retained for reference only. The examination mark determines
+  // the final percentage for Term 2/3 and for Form 4 / Upper Six in Term 1.
+  return Math.round((Number(examMark) || 0) * 100) / 100;
 }
 
-async function applyGrade(finalMark) {
-  let gradings = await db.collection('gradings').find({ isActive: true });
-  let grading = gradings[0];
-  if (!grading) {
-    gradings = await db.collection('gradings').find();
-    grading = gradings[0];
-  }
+async function applyGrade(finalMark, examBoard) {
+  let gradings = await db.collection('gradings').find();
+  const board = examBoard || 'ZIMSEC';
+  const matching = gradings.filter(g => (g.examBoard || 'ZIMSEC') === board);
+  let grading = matching.find(g => g.isActive) || matching[0];
   if (!grading) return { grade: '', points: 0, gradeRemark: '' };
-  const level = grading.levels.find(l => finalMark >= l.minMark && finalMark <= l.maxMark);
+  const level = (grading.levels || []).find(l => finalMark >= l.minMark && finalMark <= l.maxMark);
   if (level) return { grade: level.grade, points: level.points, gradeRemark: level.remark || '' };
   return { grade: '', points: 0, gradeRemark: '' };
 }
@@ -78,10 +84,17 @@ exports.createResult = async (req, res) => {
     if (existing) {
       return res.status(400).json({ success: false, message: 'Result already exists for this student/subject/term' });
     }
-    const finalMark = calcFinalMark(req.body.termMark, req.body.examMark, req.body.projectMark);
-    const gradeInfo = await applyGrade(finalMark);
+    const student = await db.collection('users').findById(req.body.student);
+    if (!student || student.role !== 'student') return res.status(400).json({ success: false, message: 'Select a valid student' });
+    const subject = await db.collection('subjects').findById(req.body.subject);
+    if (!subject) return res.status(400).json({ success: false, message: 'Select a valid subject' });
+    const examBoard = student.examBoard || 'ZIMSEC';
+    const subjectBoard = subject.examBoard || 'ZIMSEC';
+    if (examBoard !== subjectBoard) return res.status(400).json({ success: false, message: 'This subject belongs to ' + subjectBoard + ' and cannot be assigned to a ' + examBoard + ' student.' });
+    const finalMark = await calcFinalMark(req.body.termMark, req.body.examMark, req.body.term, student._id, req.body.className || student.className);
+    const gradeInfo = await applyGrade(finalMark, examBoard);
     const result = await db.collection('results').create({
-      ...req.body, teacher: req.user._id, finalMark, ...gradeInfo, status: 'draft'
+      ...req.body, examBoard, teacher: req.user._id, finalMark, ...gradeInfo, status: 'draft'
     });
     res.status(201).json({ success: true, result });
   } catch (error) {
@@ -104,8 +117,15 @@ exports.updateResult = async (req, res) => {
     for (const field of ['termMark', 'examMark', 'projectMark', 'teacherRemark']) {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) result[field] = req.body[field];
     }
-    result.finalMark = calcFinalMark(result.termMark, result.examMark, result.projectMark);
-    const gradeInfo = await applyGrade(result.finalMark);
+    const student = await db.collection('users').findById(result.student);
+    const subject = await db.collection('subjects').findById(result.subject);
+    const examBoard = student?.examBoard || result.examBoard || subject?.examBoard || 'ZIMSEC';
+    if (student && subject && examBoard !== (subject.examBoard || 'ZIMSEC')) {
+      return res.status(400).json({ success: false, message: 'The subject examination board does not match this student.' });
+    }
+    result.examBoard = examBoard;
+    result.finalMark = await calcFinalMark(result.termMark, result.examMark, result.term, result.student, result.className || student?.className);
+    const gradeInfo = await applyGrade(result.finalMark, examBoard);
     Object.assign(result, gradeInfo);
     if (['verified', 'published', 'hidden'].includes(previousStatus)) {
       // Editing invalidates any previous verification/publication decision.
