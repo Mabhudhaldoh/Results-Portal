@@ -53,7 +53,16 @@ exports.getStudentReport = async (req, res) => {
           const gradings = await db.collection('gradings').find();
           const boardGradings = gradings.filter(g => (g.examBoard || 'ZIMSEC') === resultBoard);
           const grading = boardGradings.find(g => g.isActive) || boardGradings[0];
-          const level = (grading?.levels || []).find(l => Number(r.finalMark) >= Number(l.minMark) && Number(r.finalMark) <= Number(l.maxMark));
+          const fallbackLevels = [
+            { grade: 'A', minMark: 80, maxMark: 100, points: 5, remark: 'Excellent' },
+            { grade: 'B', minMark: 70, maxMark: 79.99, points: 4, remark: 'Very Good' },
+            { grade: 'C', minMark: 60, maxMark: 69.99, points: 3, remark: 'Good' },
+            { grade: 'D', minMark: 50, maxMark: 59.99, points: 2, remark: 'Satisfactory' },
+            { grade: 'E', minMark: 40, maxMark: 49.99, points: 1, remark: 'Acceptable' },
+            { grade: 'U', minMark: 0, maxMark: 39.99, points: 0, remark: 'Unsatisfactory' },
+          ];
+          const levels = Array.isArray(grading?.levels) && grading.levels.length ? grading.levels : fallbackLevels;
+          const level = levels.find(l => Number(r.finalMark) >= Number(l.minMark) && Number(r.finalMark) <= Number(l.maxMark));
           if (level) {
             grade = level.grade || '';
             points = Number(level.points) || 0;
