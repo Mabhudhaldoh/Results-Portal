@@ -13,7 +13,7 @@ interface Student {
   feesPaid?: number; feesRequired?: number; feesBalance?: number;
 }
 
-const emptyRow = { admissionNumber: '', firstName: '', lastName: '', gender: 'Male', className: '', phone: '', parentName: '', parentPhone: '' };
+const emptyRow = { admissionNumber: '', firstName: '', lastName: '', gender: 'Male', examBoard: 'ZIMSEC', className: '', phone: '', parentName: '', parentPhone: '' };
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -203,11 +203,11 @@ export default function StudentsPage() {
   };
 
   const downloadTemplate = () => {
-    const headers = ['Admission Number', 'First Name', 'Last Name', 'Gender', 'Class', 'Phone', 'Parent Name', 'Parent Phone', 'Email', 'Address'];
+    const headers = ['Admission Number', 'First Name', 'Last Name', 'Gender', 'Examination Board', 'Class', 'Phone', 'Parent Name', 'Parent Phone', 'Email', 'Address'];
     const exampleRows = [
-      ['MLK2026011', 'Tapiwa', 'Chidhakwa', 'Male', 'Form 1', '+263771234567', 'Mr Chidhakwa', '+263771234568', '', ''],
-      ['MLK2026012', 'Ropafadzo', 'Moyo', 'Female', 'Form 2', '+263771234569', 'Mrs Moyo', '+263771234570', '', ''],
-      ['MLK2026013', 'Tatenda', 'Nhamo', 'Male', 'Form 3', '+263771234571', 'Mr Nhamo', '+263771234572', '', ''],
+      ['MLK2026011', 'Tapiwa', 'Chidhakwa', 'Male', 'ZIMSEC', 'Form 1', '+263771234567', 'Mr Chidhakwa', '+263771234568', '', ''],
+      ['MLK2026012', 'Ropafadzo', 'Moyo', 'Female', 'ZIMSEC', 'Form 2', '+263771234569', 'Mrs Moyo', '+263771234570', '', ''],
+      ['MLK2026013', 'Tatenda', 'Nhamo', 'Male', 'Cambridge', 'Form 3', '+263771234571', 'Mr Nhamo', '+263771234572', '', ''],
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
     ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 10 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 25 }, { wch: 20 }];
@@ -489,6 +489,7 @@ export default function StudentsPage() {
                       <th className="px-2 py-2 text-left">First Name *</th>
                       <th className="px-2 py-2 text-left">Last Name *</th>
                       <th className="px-2 py-2 text-left">Gender</th>
+                      <th className="px-2 py-2 text-left">Exam Board *</th>
                       <th className="px-2 py-2 text-left">Class *</th>
                       <th className="px-2 py-2 text-left">Phone</th>
                       <th className="px-2 py-2 text-left">Parent Name</th>
@@ -506,6 +507,11 @@ export default function StudentsPage() {
                         <td className="px-1 py-1">
                           <select className="w-full px-2 py-1 border rounded text-sm dark:bg-gray-800 dark:border-gray-600" value={row.gender} onChange={e => updateQuickRow(i, 'gender', e.target.value)}>
                             <option>Male</option><option>Female</option>
+                          </select>
+                        </td>
+                        <td className="px-1 py-1">
+                          <select className="w-full px-2 py-1 border rounded text-sm dark:bg-gray-800 dark:border-gray-600" value={row.examBoard || 'ZIMSEC'} onChange={e => updateQuickRow(i, 'examBoard', e.target.value)}>
+                            <option value="ZIMSEC">ZIMSEC</option><option value="Cambridge">Cambridge</option>
                           </select>
                         </td>
                         <td className="px-1 py-1">
