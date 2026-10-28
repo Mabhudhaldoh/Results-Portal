@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { Settings as SettingsIcon, Save, DollarSign, CalendarClock } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 function toLocalInput(iso?: string) {
   if (!iso) return '';
@@ -12,6 +13,9 @@ function toLocalInput(iso?: string) {
 }
 
 export default function SettingsPage() {
+  const { user } = useAuth();
+  const [signaturePreview, setSignaturePreview] = useState('');
+  const [signatureSaving, setSignatureSaving] = useState(false);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -30,6 +34,7 @@ export default function SettingsPage() {
     api.get('/settings').then(res => {
       const s = res.data.settings;
       setSettings(s);
+      setSignaturePreview(s.headmasterSignature || '');
       const v = s.resultsVisibility || {};
       setForm({
         schoolName: s.schoolName || '', schoolMotto: s.schoolMotto || '',
@@ -60,6 +65,43 @@ export default function SettingsPage() {
       });
       toast.success('Settings saved');
     } catch (err: any) { toast.error(err.response?.data?.message); }
+  };
+
+  const handleSignatureFile = (file?: File) => {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+      toast.error('Please upload a PNG, JPEG or WebP signature image. Transparent PNG is recommended.');
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      toast.error('Signature image must be 1 MB or smaller.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') setSignaturePreview(reader.result);
+    };
+    reader.onerror = () => toast.error('Could not read the signature image.');
+    reader.readAsDataURL(file);
+  };
+
+  const saveSignature = async () => {
+    if (!signaturePreview) {
+      toast.error('Choose a signature image first.');
+      return;
+    }
+    setSignatureSaving(true);
+    try {
+      const response = await api.put('/settings', { headmasterSignature: signaturePreview });
+      const saved = response.data?.settings?.headmasterSignature || signaturePreview;
+      setSignaturePreview(saved);
+      setSettings((current: any) => ({ ...(current || {}), headmasterSignature: saved }));
+      toast.success('Headmaster signature saved. Generate a new report card to verify it.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Could not save the signature.');
+    } finally {
+      setSignatureSaving(false);
+    }
   };
 
   const quickSetWindow = (hours: number) => {
@@ -93,6 +135,27 @@ export default function SettingsPage() {
           <div><label className="label">Headmaster Name</label><input className="input-field" value={form.headmasterName} onChange={e => setForm({ ...form, headmasterName: e.target.value })} /></div>
         </div>
       </div>
+
+      {user?.role === 'headmaster' && (
+        <div className="card space-y-4">
+          <h2 className="text-lg font-semibold">Headmaster's Report Card Signature</h2>
+          <p className="text-sm text-gray-500">Upload a clear signature image. A transparent PNG is recommended so it blends into the printed report card. Maximum file size: 1 MB.</p>
+          {signaturePreview && (
+            <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Signature preview</p>
+              <img src={signaturePreview} alt="Headmaster signature preview" className="max-h-24 max-w-full object-contain object-left" />
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <input aria-label="Upload headmaster signature" type="file" accept="image/png,image/jpeg,image/webp" onChange={e => handleSignatureFile(e.target.files?.[0])} className="input-field" />
+            <button type="button" onClick={saveSignature} disabled={!signaturePreview || signatureSaving} className="btn-primary disabled:opacity-50">
+              {signatureSaving ? 'Saving Signature...' : 'Save Signature'}
+            </button>
+            <button type="button" onClick={() => setSignaturePreview('')} className="btn-outline">Clear Preview</button>
+          </div>
+          <p className="text-xs text-gray-500">Generate a fresh report card after saving. Previously downloaded PDFs will not change.</p>
+        </div>
+      )}
 
       <div className="card space-y-4">
         <h2 className="text-lg font-semibold">Grade Mark Composition</h2>
