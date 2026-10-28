@@ -126,7 +126,7 @@ export default function ReportCardView({ report }: Props) {
 
           <div className="grid grid-cols-2 gap-8 mt-5 pt-4 report-footer">
             <div>
-              <div className="h-12 border-b-2 border-gray-400 mb-1 flex items-end justify-start">{report.settings?.headmasterSignature && <img src={report.settings.headmasterSignature} alt="Headmaster signature" className="max-h-12 max-w-full object-contain object-left-bottom" />}</div>
+              <div className="h-12 border-b-2 border-gray-400 mb-1 flex items-end justify-start overflow-hidden">{(report.settings?.headmasterSignature || report.headmasterSignature) ? <img src={report.settings?.headmasterSignature || report.headmasterSignature} alt="Headmaster signature" style={{ display: "block", height: "48px", maxWidth: "100%", width: "auto", objectFit: "contain", objectPosition: "left bottom" }} /> : <span className="text-xs text-gray-400 no-print">Signature not configured</span>}</div>
               <p className="text-sm font-semibold text-mlk-blue">Headmaster's Signature & Stamp</p>
               <p className="text-xs text-gray-400">Date: _______________</p>
             </div>
