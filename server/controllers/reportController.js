@@ -88,7 +88,7 @@ exports.getStudentReport = async (req, res) => {
     studentData.className = await db.collection('classes').findById(student.className) || student.className;
     studentData.stream = await db.collection('streams').findById(student.stream) || student.stream;
 
-    res.json({ success: true, report: { student: studentData, results, average, attendance, settings, academicYear: displayAcademicYear, term: eff.term, resultsHidden, resultsHiddenMessage } });
+    res.json({ success: true, report: { student: studentData, results, average, attendance, settings: settings || {}, headmasterSignature: settings?.headmasterSignature || null, academicYear: displayAcademicYear, term: eff.term, resultsHidden, resultsHiddenMessage } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
