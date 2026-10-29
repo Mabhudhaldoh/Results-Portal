@@ -245,10 +245,10 @@ textarea:focus-visible {
 .app-main .text-slate-400 {
   color: #c1cde0 !important;
 }
-.app-main .border-gray-200,
-.app-main .border-gray-300,
-.app-main .border-slate-200,
-.app-main .border-slate-300 {
+.app-main [class~="border-gray-200"],
+.app-main [class~="border-gray-300"],
+.app-main [class~="border-slate-200"],
+.app-main [class~="border-slate-300"] {
   border-color: #2b4569 !important;
 }
 
@@ -315,10 +315,10 @@ html:not(.dark) .app-main .card .input-field::placeholder,
 html:not(.dark) .app-main .input-field::placeholder {
   color: #58758a !important;
 }
-html:not(.dark) .app-main .card .border-gray-200,
-html:not(.dark) .app-main .card .border-gray-300,
-html:not(.dark) .app-main .card .border-slate-200,
-html:not(.dark) .app-main .card .border-slate-300 {
+html:not(.dark) .app-main .card [class~="border-gray-200"],
+html:not(.dark) .app-main .card [class~="border-gray-300"],
+html:not(.dark) .app-main .card [class~="border-slate-200"],
+html:not(.dark) .app-main .card [class~="border-slate-300"] {
   border-color: #d4af37 !important;
 }
 html:not(.dark) .app-main .btn-outline {
