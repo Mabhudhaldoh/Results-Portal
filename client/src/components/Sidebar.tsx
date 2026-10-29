@@ -93,7 +93,7 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-slate-700 bg-slate-950">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-mlk-red rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <div className="w-10 h-10 bg-white rounded-lg border border-[#d4af37] p-0.5 flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm">
             <img src="/school_logo.png" alt="MLK" className="w-full h-full object-contain" onError={e => { e.currentTarget.style.display = 'none'; (e.currentTarget.nextSibling as HTMLElement).style.display = 'flex'; }} />
             <span className="text-white font-bold text-lg hidden items-center justify-center">M</span>
           </div>
