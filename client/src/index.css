@@ -253,67 +253,77 @@ textarea:focus-visible {
 }
 
 
-/* Light Mode: sky-blue surfaces with elegant gold edging and dark readable text. */
+/* Light Mode: premium navy surfaces, gold edges, and high-contrast hover states. */
 html:not(.dark) .app-main {
-  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 52%, #f0f9ff 100%) !important;
-  color: #0c2d48 !important;
-  color-scheme: light;
+  background: linear-gradient(145deg, #071a33 0%, #0b2547 55%, #102f55 100%) !important;
+  color: #f8fafc !important;
+  color-scheme: dark;
 }
 html:not(.dark) .app-main .card,
 html:not(.dark) .app-main .stat-card {
-  background: linear-gradient(145deg, #f0f9ff 0%, #dbeafe 100%) !important;
-  color: #0c2d48 !important;
+  background: linear-gradient(145deg, #102b4d 0%, #0a1d36 100%) !important;
+  color: #f8fafc !important;
   border: 1px solid #d4af37 !important;
-  box-shadow: 0 8px 24px rgba(12, 45, 72, 0.10), inset 0 0 0 1px rgba(212, 175, 55, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24), inset 0 0 0 1px rgba(212, 175, 55, 0.16);
 }
-html:not(.dark) .app-main .card .text-gray-900,
-html:not(.dark) .app-main .card .text-gray-800,
-html:not(.dark) .app-main .card .text-gray-700,
-html:not(.dark) .app-main .card .text-gray-600,
-html:not(.dark) .app-main .card .text-gray-500,
-html:not(.dark) .app-main .card .text-slate-900,
-html:not(.dark) .app-main .card .text-slate-800,
-html:not(.dark) .app-main .card .text-slate-700,
-html:not(.dark) .app-main .card .text-slate-600,
-html:not(.dark) .app-main .card .text-slate-500,
-html:not(.dark) .app-main .stat-card .text-gray-900,
-html:not(.dark) .app-main .stat-card .text-gray-800,
-html:not(.dark) .app-main .stat-card .text-gray-700,
-html:not(.dark) .app-main .stat-card .text-gray-600,
-html:not(.dark) .app-main .stat-card .text-gray-500,
-html:not(.dark) .app-main .stat-card .text-slate-900,
-html:not(.dark) .app-main .stat-card .text-slate-800,
-html:not(.dark) .app-main .stat-card .text-slate-700,
-html:not(.dark) .app-main .stat-card .text-slate-600,
-html:not(.dark) .app-main .stat-card .text-slate-500 {
-  color: #123653 !important;
+html:not(.dark) .app-main .card [class*="text-gray-"],
+html:not(.dark) .app-main .card [class*="text-slate-"],
+html:not(.dark) .app-main .stat-card [class*="text-gray-"],
+html:not(.dark) .app-main .stat-card [class*="text-slate-"],
+html:not(.dark) .app-main > [class*="text-gray-"],
+html:not(.dark) .app-main > [class*="text-slate-"] {
+  color: #f1f5f9 !important;
 }
-html:not(.dark) .app-main .card .bg-gray-50,
-html:not(.dark) .app-main .card .bg-slate-50,
-html:not(.dark) .app-main .card .bg-gray-100,
-html:not(.dark) .app-main .stat-card .bg-gray-50,
-html:not(.dark) .app-main .stat-card .bg-slate-50,
-html:not(.dark) .app-main .stat-card .bg-gray-100 {
-  background-color: #e0f2fe !important;
+html:not(.dark) .app-main .card [class~="bg-gray-50"],
+html:not(.dark) .app-main .card [class~="bg-slate-50"],
+html:not(.dark) .app-main .card [class~="bg-gray-100"],
+html:not(.dark) .app-main .stat-card [class~="bg-gray-50"],
+html:not(.dark) .app-main .stat-card [class~="bg-slate-50"],
+html:not(.dark) .app-main .stat-card [class~="bg-gray-100"] {
+  background-color: #173657 !important;
+  color: #f8fafc !important;
 }
-html:not(.dark) .app-main .card .table-header {
-  background: #bae6fd !important;
-  color: #123653 !important;
+html:not(.dark) .app-main .card .table-header,
+html:not(.dark) .app-main .card thead,
+html:not(.dark) .app-main .card thead tr {
+  background: #173b63 !important;
+  color: #ffffff !important;
   border-bottom: 1px solid #d4af37 !important;
 }
 html:not(.dark) .app-main .card tbody,
 html:not(.dark) .app-main .card tbody td {
-  color: #123653 !important;
+  color: #f1f5f9 !important;
+}
+html:not(.dark) .app-main .card tbody tr {
+  background-color: #102b4d !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.24) !important;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+html:not(.dark) .app-main .card tbody tr:hover,
+html:not(.dark) .app-main .card tbody tr:focus-within {
+  background-color: #28517b !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 0 1px #d4af37;
+}
+html:not(.dark) .app-main .card tbody tr:hover td,
+html:not(.dark) .app-main .card tbody tr:focus-within td {
+  color: #ffffff !important;
 }
 html:not(.dark) .app-main .card .input-field,
-html:not(.dark) .app-main .input-field {
-  background-color: #f8fdff !important;
-  color: #123653 !important;
-  border-color: #d4af37 !important;
+html:not(.dark) .app-main .input-field,
+html:not(.dark) .app-main input,
+html:not(.dark) .app-main select,
+html:not(.dark) .app-main textarea {
+  background-color: #071a33 !important;
+  color: #ffffff !important;
+  border: 1px solid #d4af37 !important;
 }
 html:not(.dark) .app-main .card .input-field::placeholder,
-html:not(.dark) .app-main .input-field::placeholder {
-  color: #58758a !important;
+html:not(.dark) .app-main .input-field::placeholder,
+html:not(.dark) .app-main input::placeholder,
+html:not(.dark) .app-main textarea::placeholder {
+  color: #b8c8dc !important;
+  opacity: 1;
 }
 html:not(.dark) .app-main .card [class~="border-gray-200"],
 html:not(.dark) .app-main .card [class~="border-gray-300"],
@@ -322,25 +332,30 @@ html:not(.dark) .app-main .card [class~="border-slate-300"] {
   border-color: #d4af37 !important;
 }
 html:not(.dark) .app-main .btn-outline {
-  color: #123653 !important;
+  color: #ffffff !important;
   border-color: #d4af37 !important;
-  background: #e0f2fe !important;
+  background: #173b63 !important;
 }
 html:not(.dark) .app-main .btn-outline:hover {
-  background: #bae6fd !important;
+  background: #28517b !important;
+  box-shadow: 0 0 0 1px #d4af37;
 }
 html:not(.dark) .app-navbar {
-  background: #e0f2fe !important;
-  color: #123653 !important;
+  background: #071a33 !important;
+  color: #f8fafc !important;
   border-bottom: 1px solid #d4af37 !important;
 }
 html:not(.dark) .app-navbar .text-gray-500,
 html:not(.dark) .app-navbar .text-gray-600,
 html:not(.dark) .app-navbar .text-gray-700 {
-  color: #34566d !important;
+  color: #dbe7f5 !important;
 }
 html:not(.dark) .app-navbar input {
-  background: #f8fdff !important;
-  color: #123653 !important;
+  background: #102b4d !important;
+  color: #ffffff !important;
   border-color: #d4af37 !important;
+}
+html:not(.dark) .app-main button:hover,
+html:not(.dark) .app-main a:hover {
+  outline-color: #d4af37;
 }
