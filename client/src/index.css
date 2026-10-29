@@ -251,3 +251,96 @@ textarea:focus-visible {
 .app-main .border-slate-300 {
   border-color: #2b4569 !important;
 }
+
+
+/* Light Mode: sky-blue surfaces with elegant gold edging and dark readable text. */
+html:not(.dark) .app-main {
+  background: linear-gradient(145deg, #e0f2fe 0%, #bae6fd 52%, #f0f9ff 100%) !important;
+  color: #0c2d48 !important;
+  color-scheme: light;
+}
+html:not(.dark) .app-main .card,
+html:not(.dark) .app-main .stat-card {
+  background: linear-gradient(145deg, #f0f9ff 0%, #dbeafe 100%) !important;
+  color: #0c2d48 !important;
+  border: 1px solid #d4af37 !important;
+  box-shadow: 0 8px 24px rgba(12, 45, 72, 0.10), inset 0 0 0 1px rgba(212, 175, 55, 0.18);
+}
+html:not(.dark) .app-main .card .text-gray-900,
+html:not(.dark) .app-main .card .text-gray-800,
+html:not(.dark) .app-main .card .text-gray-700,
+html:not(.dark) .app-main .card .text-gray-600,
+html:not(.dark) .app-main .card .text-gray-500,
+html:not(.dark) .app-main .card .text-slate-900,
+html:not(.dark) .app-main .card .text-slate-800,
+html:not(.dark) .app-main .card .text-slate-700,
+html:not(.dark) .app-main .card .text-slate-600,
+html:not(.dark) .app-main .card .text-slate-500,
+html:not(.dark) .app-main .stat-card .text-gray-900,
+html:not(.dark) .app-main .stat-card .text-gray-800,
+html:not(.dark) .app-main .stat-card .text-gray-700,
+html:not(.dark) .app-main .stat-card .text-gray-600,
+html:not(.dark) .app-main .stat-card .text-gray-500,
+html:not(.dark) .app-main .stat-card .text-slate-900,
+html:not(.dark) .app-main .stat-card .text-slate-800,
+html:not(.dark) .app-main .stat-card .text-slate-700,
+html:not(.dark) .app-main .stat-card .text-slate-600,
+html:not(.dark) .app-main .stat-card .text-slate-500 {
+  color: #123653 !important;
+}
+html:not(.dark) .app-main .card .bg-gray-50,
+html:not(.dark) .app-main .card .bg-slate-50,
+html:not(.dark) .app-main .card .bg-gray-100,
+html:not(.dark) .app-main .stat-card .bg-gray-50,
+html:not(.dark) .app-main .stat-card .bg-slate-50,
+html:not(.dark) .app-main .stat-card .bg-gray-100 {
+  background-color: #e0f2fe !important;
+}
+html:not(.dark) .app-main .card .table-header {
+  background: #bae6fd !important;
+  color: #123653 !important;
+  border-bottom: 1px solid #d4af37 !important;
+}
+html:not(.dark) .app-main .card tbody,
+html:not(.dark) .app-main .card tbody td {
+  color: #123653 !important;
+}
+html:not(.dark) .app-main .card .input-field,
+html:not(.dark) .app-main .input-field {
+  background-color: #f8fdff !important;
+  color: #123653 !important;
+  border-color: #d4af37 !important;
+}
+html:not(.dark) .app-main .card .input-field::placeholder,
+html:not(.dark) .app-main .input-field::placeholder {
+  color: #58758a !important;
+}
+html:not(.dark) .app-main .card .border-gray-200,
+html:not(.dark) .app-main .card .border-gray-300,
+html:not(.dark) .app-main .card .border-slate-200,
+html:not(.dark) .app-main .card .border-slate-300 {
+  border-color: #d4af37 !important;
+}
+html:not(.dark) .app-main .btn-outline {
+  color: #123653 !important;
+  border-color: #d4af37 !important;
+  background: #e0f2fe !important;
+}
+html:not(.dark) .app-main .btn-outline:hover {
+  background: #bae6fd !important;
+}
+html:not(.dark) .app-navbar {
+  background: #e0f2fe !important;
+  color: #123653 !important;
+  border-bottom: 1px solid #d4af37 !important;
+}
+html:not(.dark) .app-navbar .text-gray-500,
+html:not(.dark) .app-navbar .text-gray-600,
+html:not(.dark) .app-navbar .text-gray-700 {
+  color: #34566d !important;
+}
+html:not(.dark) .app-navbar input {
+  background: #f8fdff !important;
+  color: #123653 !important;
+  border-color: #d4af37 !important;
+}
